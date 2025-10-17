@@ -1,28 +1,38 @@
 // ضع هنا رابط Google Script الخاص بك
-const scriptURL = "https://script.google.com/macros/s/AKfycbx9R-53K7tvfbc_KO-jOLtdxPKlqxtfFwUQMNjavSK803g27c9rQnTWJIdh8A5ZMkAu/exec";
-
+const scriptURL =
+  "https://script.google.com/macros/s/AKfycbwQO8VQr8fLxhb6UXN-FtkSPZttemOx3uaxIaDKcFMoTe7fLYne71rN04QKtQf7O8Ub/exec";
 // إرسال البيانات إلى Google Sheet
 function saveRequest(data) {
   return fetch(scriptURL, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 }
 
+
+
 // جلب البيانات من Google Sheet
 async function getRequests() {
-  const res = await fetch(scriptURL);
-  const rows = await res.json();
-  return rows.slice(1).map(r => ({
-    irNo: r[0],
-    irRev: r[1],
-    irLatestRev: r[2],
-    hypwr: r[3],
-    desc: r[4],
-    location: r[5],
-    receivedDate: r[6],
-  }));
+  try {
+    const res = await fetch(scriptURL, { headers: { "Content-Type": "application/json" } });
+    if (!res.ok) throw new Error("Network response was not ok");
+    const rows = await res.json();
+    return rows.slice(1).map(r => ({
+      irNo: r[0],
+      irRev: r[1],
+      irLatestRev: r[2],
+      hypwr: r[3],
+      desc: r[4],
+      location: r[5],
+      receivedDate: r[6],
+    }));
+  } catch (error) {
+    alert("❌ Error fetching data: " + error.message);
+    return [];
+  }
 }
+
 
 // نسخ صف واحد بتنسيق Excel
 function copyRow(data) {
@@ -36,7 +46,7 @@ function copyRow(data) {
 async function copyAllRows() {
   const rows = await getRequests();
   if (!rows.length) return alert("No rows found!");
-  const text = rows.map(r => Object.values(r).join("\t")).join("\n");
+  const text = rows.map((r) => Object.values(r).join("\t")).join("\n");
   navigator.clipboard.writeText(text).then(() => {
     alert("✅ All rows copied successfully!");
   });
