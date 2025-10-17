@@ -1,79 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Engineer – Inspection Request</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="shared.js"></script>
-  </head>
-  <body>
-    <nav class="navbar">
-      <div class="nav-container">
-        <span class="nav-logo">Inspection System</span>
-        <div class="nav-links">
-          <a href="index.html">Engineer</a>
-          <a href="dc.html">Document Controller</a>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Engineer – Inspection Request</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="shared.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <span class="nav-logo">Inspection System</span>
+      <div class="nav-links">
+        <a href="index.html" class="active">Engineer</a>
+        <a href="dc.html">Document Controller</a>
       </div>
-    </nav>
+    </div>
+  </nav>
 
-    <h2>Engineer – Submit Inspection Request</h2>
-    <p class="intro">Fill in the form and click "Save Request". The DC can view
-      it in their page.</p>
+  <h2>Engineer – Submit Inspection Request</h2>
+  <p class="intro">Fill the form and click "Save Request". The DC can view it online.</p>
 
-    <form id="irForm">
-      <label>Inspection Request No:</label>
-      <input id="irNo" required>
+  <form id="irForm">
+    <label>Inspection Request No:</label>
+    <input id="irNo" required />
 
-      <label>IR Rev.:</label>
-      <input id="irRev">
+    <label>IR Rev.:</label>
+    <input id="irRev" />
 
-      <label>IR Latest Rev.:</label>
-      <input id="irLatestRev">
+    <label>IR Latest Rev.:</label>
+    <input id="irLatestRev" />
 
-      <label>HYPWRLINK:</label>
-      <input id="hypwr">
+    <label>HYPWRLINK:</label>
+    <input id="hypwr" />
 
-      <label>Description:</label>
-      <textarea id="desc" rows="2"></textarea>
+    <label>Description:</label>
+    <textarea id="desc" rows="2"></textarea>
 
-      <label>Location:</label>
-      <input id="location">
+    <label>Location:</label>
+    <input id="location" />
 
-      <label>Received Date:</label>
-      <input type="date" id="receivedDate">
+    <label>Received Date:</label>
+    <input type="date" id="receivedDate" />
 
-      <button type="submit">💾 Save Request</button>
-    </form>
-<script>
-document.getElementById("irForm").addEventListener("submit", e => {
-  e.preventDefault();
+    <button type="submit">💾 Save Request</button>
+  </form>
 
-  // اجلب كل القيم باستخدام getElementById
-  const irNoEl = document.getElementById("irNo");
-  const irRevEl = document.getElementById("irRev");
-  const irLatestRevEl = document.getElementById("irLatestRev");
-  const hypwrEl = document.getElementById("hypwr");
-  const descEl = document.getElementById("desc");
-  const locationEl = document.getElementById("location");
-  const receivedDateEl = document.getElementById("receivedDate");
-
-  const data = {
-    irNo: irNoEl.value.trim(),
-    irRev: irRevEl.value.trim(),
-    irLatestRev: irLatestRevEl.value.trim(),
-    hypwr: hypwrEl.value.trim(),
-    desc: descEl.value.trim(),
-    location: locationEl.value.trim(),
-    receivedDate: receivedDateEl.value
-  };
-
-  saveRequest(data);
-  alert("✅ Request saved successfully!");
-  e.target.reset();
-});
-</script>
-
-  </body>
+  <script>
+    document.getElementById("irForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = {
+        irNo: document.getElementById("irNo").value.trim(),
+        irRev: document.getElementById("irRev").value.trim(),
+        irLatestRev: document.getElementById("irLatestRev").value.trim(),
+        hypwr: document.getElementById("hypwr").value.trim(),
+        desc: document.getElementById("desc").value.trim(),
+        location: document.getElementById("location").value.trim(),
+        receivedDate: document.getElementById("receivedDate").value,
+      };
+      try {
+        await saveRequest(data);
+        alert("✅ Request saved successfully!");
+        e.target.reset();
+      } catch (err) {
+        alert("❌ Error saving request: " + err);
+      }
+    });
+  </script>
+</body>
 </html>

@@ -1,66 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DC – Inspection Requests</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="shared.js"></script>
-  </head>
-  <body>
-    <nav class="navbar">
-      <div class="nav-container">
-        <span class="nav-logo">Inspection System</span>
-        <div class="nav-links">
-          <a href="index.html">Engineer</a>
-          <a href="dc.html">Document Controller</a>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DC – Inspection Requests</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="shared.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <span class="nav-logo">Inspection System</span>
+      <div class="nav-links">
+        <a href="index.html">Engineer</a>
+        <a href="dc.html" class="active">Document Controller</a>
       </div>
-    </nav>
+    </div>
+  </nav>
 
-    <h2>Document Controller – Requests Overview</h2>
-    <p class="intro">View and copy all requests submitted by engineers. You can
-      copy individual rows or all at once.</p>
+  <h2>Document Controller – Requests Overview</h2>
+  <p class="intro">All inspection requests submitted by engineers appear below.</p>
 
-    <div class="table-container">
-      <div class="top-actions">
-        <button class="action-btn" id="copyAll">Copy All</button>
-        <button class="action-btn" style="background:#d9534f"
-          id="clearAll">Clear All</button>
-      </div>
-
-      <table id="reqTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Inspection Request No</th>
-            <th>IR Rev.</th>
-            <th>IR Latest Rev.</th>
-            <th>HYPWRLINK</th>
-            <th>Description</th>
-            <th>Location</th>
-            <th>Received Date</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+  <div class="table-container">
+    <div class="top-actions">
+      <button class="action-btn" id="refreshBtn">🔄 Refresh</button>
+      <button class="action-btn" id="copyAllBtn">📋 Copy All</button>
     </div>
 
-    <script>
-    const tableBody = document.querySelector("#reqTable tbody");
+    <table id="reqTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Inspection Request No</th>
+          <th>IR Rev.</th>
+          <th>IR Latest Rev.</th>
+          <th>HYPWRLINK</th>
+          <th>Description</th>
+          <th>Location</th>
+          <th>Received Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-    function renderTable() {
-      tableBody.innerHTML = "";
-      const data = getRequests();
-      if (!data.length) {
-        tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#777;">No requests yet</td></tr>';
+  <script>
+    const tbody = document.querySelector("#reqTable tbody");
+
+    async function renderTable() {
+      tbody.innerHTML = "<tr><td colspan='9'>Loading...</td></tr>";
+      const rows = await getRequests();
+      tbody.innerHTML = "";
+
+      if (!rows.length) {
+        tbody.innerHTML = "<tr><td colspan='9'>No requests found</td></tr>";
         return;
       }
 
-      data.forEach((r, i) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
+      rows.forEach((r, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
           <td data-label="#">${i + 1}</td>
           <td data-label="Inspection Request No">${r.irNo}</td>
           <td data-label="IR Rev.">${r.irRev}</td>
@@ -69,26 +69,17 @@
           <td data-label="Description">${r.desc}</td>
           <td data-label="Location">${r.location}</td>
           <td data-label="Received Date">${r.receivedDate}</td>
-          <td data-label="Action"></td>
+          <td data-label="Action"><button class="action-btn">Copy</button></td>
         `;
-        const btn = document.createElement("button");
-        btn.textContent = "Copy";
-        btn.className = "action-btn";
-        btn.onclick = () => copyRow(r);
-        row.querySelector("td:last-child").appendChild(btn);
-        tableBody.appendChild(row);
+        tr.querySelector("button").onclick = () => copyRow(r);
+        tbody.appendChild(tr);
       });
     }
 
-    renderTable();
+    document.getElementById("refreshBtn").onclick = renderTable;
+    document.getElementById("copyAllBtn").onclick = copyAllRows;
 
-    document.getElementById("copyAll").onclick = copyAllRows;
-    document.getElementById("clearAll").onclick = () => {
-      if (confirm("Are you sure you want to clear all requests?")) {
-        localStorage.removeItem("inspection_requests");
-        renderTable();
-      }
-    };
+    renderTable();
   </script>
-  </body>
+</body>
 </html>
