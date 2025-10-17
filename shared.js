@@ -1,38 +1,34 @@
-// ضع هنا رابط Google Script الخاص بك
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbyzChOzf3y6ENY0KeAW46cyFS1oPexVch9Av1_G5FXh986gVq0cQTOzhBv-HrddnSc/exec"; // إرسال البيانات إلى Google Sheet
+  "https://script.google.com/macros/s/AKfycbyzChOzf3y6ENY0KeAW46cyFS1oPexVch9Av1_G5FXh986gVq0cQTOzhBv-HrddnSc/exec";
+
+// إرسال البيانات إلى Google Sheet
 function saveRequest(data) {
   return fetch(scriptURL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    mode: "no-cors", // 👈 يمنع المتصفح من حظر الاتصال
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(data),
   });
 }
 
-// جلب البيانات من Google Sheet
+// قراءة الطلبات من Google Sheet
 async function getRequests() {
-  try {
-    const res = await fetch(scriptURL, {
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!res.ok) throw new Error("Network response was not ok");
-    const rows = await res.json();
-    return rows.slice(1).map((r) => ({
-      irNo: r[0],
-      irRev: r[1],
-      irLatestRev: r[2],
-      hypwr: r[3],
-      desc: r[4],
-      location: r[5],
-      receivedDate: r[6],
-    }));
-  } catch (error) {
-    alert("❌ Error fetching data: " + error.message);
-    return [];
-  }
+  const res = await fetch(scriptURL);
+  const rows = await res.json();
+  return rows.slice(1).map((r) => ({
+    irNo: r[0],
+    irRev: r[1],
+    irLatestRev: r[2],
+    hypwr: r[3],
+    desc: r[4],
+    location: r[5],
+    receivedDate: r[6],
+  }));
 }
 
-// نسخ صف واحد بتنسيق Excel
+// نسخ صف واحد
 function copyRow(data) {
   const text = Object.values(data).join("\t");
   navigator.clipboard.writeText(text).then(() => {
