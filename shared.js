@@ -1,15 +1,16 @@
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbyzChOzf3y6ENY0KeAW46cyFS1oPexVch9Av1_G5FXh986gVq0cQTOzhBv-HrddnSc/exec";
+  "https://script.google.com/macros/s/AKfycbyZJf3pwvOusjSmz9EIrCe6xYkMBzijw4KY2V6RTps4yZvhR33nwxF1sIffUosaAOk/exec";
 
 // إرسال البيانات إلى Google Sheet
-function saveRequest(data) {
-  return fetch(scriptURL, {
+async function saveRequest(data) {
+  const form = new FormData();
+  for (const key in data) {
+    form.append(key, data[key]);
+  }
+
+  await fetch(scriptURL, {
     method: "POST",
-    mode: "no-cors", // 👈 يمنع المتصفح من حظر الاتصال
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
+    body: form,
   });
 }
 
