@@ -1,7 +1,6 @@
 // ضع هنا رابط Google Script الخاص بك
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbwQO8VQr8fLxhb6UXN-FtkSPZttemOx3uaxIaDKcFMoTe7fLYne71rN04QKtQf7O8Ub/exec";
-// إرسال البيانات إلى Google Sheet
+  "https://script.google.com/macros/s/AKfycbzE8eoPMRPQyV8pkSzOzRTTI3HKxdC-e7LPUu56IeAxR8gr1d0uwRjDvZ6wl-8-GYk/exec"; // إرسال البيانات إلى Google Sheet
 function saveRequest(data) {
   return fetch(scriptURL, {
     method: "POST",
@@ -10,15 +9,15 @@ function saveRequest(data) {
   });
 }
 
-
-
 // جلب البيانات من Google Sheet
 async function getRequests() {
   try {
-    const res = await fetch(scriptURL, { headers: { "Content-Type": "application/json" } });
+    const res = await fetch(scriptURL, {
+      headers: { "Content-Type": "application/json" },
+    });
     if (!res.ok) throw new Error("Network response was not ok");
     const rows = await res.json();
-    return rows.slice(1).map(r => ({
+    return rows.slice(1).map((r) => ({
       irNo: r[0],
       irRev: r[1],
       irLatestRev: r[2],
@@ -32,7 +31,6 @@ async function getRequests() {
     return [];
   }
 }
-
 
 // نسخ صف واحد بتنسيق Excel
 function copyRow(data) {
