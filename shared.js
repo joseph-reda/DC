@@ -1,6 +1,6 @@
 // ضع هنا رابط Google Script الخاص بك
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbxDUW9GESX433B-NKHrs7ZcUbNbkoQgw0EJ4fD6mJcrYsNycibufnOvJ8ig83Wiftk/exec"; // إرسال البيانات إلى Google Sheet
+  "https://script.google.com/macros/s/AKfycbyzChOzf3y6ENY0KeAW46cyFS1oPexVch9Av1_G5FXh986gVq0cQTOzhBv-HrddnSc/exec"; // إرسال البيانات إلى Google Sheet
 function saveRequest(data) {
   return fetch(scriptURL, {
     method: "POST",
