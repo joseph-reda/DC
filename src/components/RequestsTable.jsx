@@ -4,7 +4,7 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // 🟡 استماع مباشر للتحديثات من Firebase
+    // 🟡 الاستماع لتحديثات Firebase
     useEffect(() => {
         const unsubscribe = onListen((data) => {
             setRows(data);
@@ -13,7 +13,7 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
         return () => unsubscribe && unsubscribe();
     }, [onListen]);
 
-    // 🔴 حذف صف
+    // 🔴 حذف صف واحد
     async function handleDelete(id) {
         if (!window.confirm("Are you sure you want to delete this request?")) return;
         try {
@@ -36,6 +36,10 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
 
     // 🟣 نسخ جميع الصفوف
     async function handleCopyAll() {
+        if (rows.length === 0) {
+            alert("⚠️ No data to copy");
+            return;
+        }
         try {
             await onCopyAll(rows);
             alert("✅ All rows copied to clipboard!");
@@ -56,6 +60,7 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
                 boxShadow: "0 3px 12px rgba(0,0,0,0.08)",
             }}
         >
+            {/* 🔹 أزرار التحكم */}
             <div
                 className="actions"
                 style={{
@@ -74,12 +79,14 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
                         borderRadius: "6px",
                         border: "none",
                         cursor: "pointer",
+                        fontWeight: "500",
                     }}
                 >
                     📋 Copy All
                 </button>
             </div>
 
+            {/* 🔸 الجدول */}
             <table
                 border="1"
                 cellPadding="8"
@@ -90,18 +97,19 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
                     fontSize: "0.95rem",
                 }}
             >
-                <thead style={{ background: "#f1f5f9" }}>
+                <thead style={{ background: "#f1f5f9", fontWeight: "bold" }}>
                     <tr>
                         <th>IR No</th>
                         <th>IR Rev.</th>
-                        <th>IR Latest Rev.</th>
+                        <th>Latest Rev.</th>
                         <th>HYPWRLINK</th>
                         <th>Description</th>
                         <th>Location</th>
                         <th>Received Date</th>
-                        <th>Actions</th>
+                        <th style={{ textAlign: "center" }}>Actions</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     {loading ? (
                         <tr>
@@ -117,7 +125,7 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
                         </tr>
                     ) : (
                         rows.map((r) => (
-                            <tr key={r.id}>
+                            <tr key={r.id} style={{ borderBottom: "1px solid #eee" }}>
                                 <td>{r.irNo || "-"}</td>
                                 <td>{r.irRev || "-"}</td>
                                 <td>{r.irLatestRev || "-"}</td>
@@ -127,7 +135,10 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
                                             href={r.hypwr}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            style={{ color: "#2563eb" }}
+                                            style={{
+                                                color: "#2563eb",
+                                                textDecoration: "underline",
+                                            }}
                                         >
                                             Link
                                         </a>
@@ -135,10 +146,11 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
                                         "-"
                                     )}
                                 </td>
-                                <td>{r.desc || "-"}</td>
+                                <td style={{ maxWidth: "250px", whiteSpace: "normal" }}>{r.desc || "-"}</td>
                                 <td>{r.location || "-"}</td>
                                 <td>{r.receivedDate || "-"}</td>
-                                <td>
+
+                                <td style={{ textAlign: "center" }}>
                                     <button
                                         onClick={() => handleCopyRow(r)}
                                         style={{

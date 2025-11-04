@@ -31,12 +31,20 @@ export async function saveRequest(data) {
   await push(requestsRef, data);
 }
 
-// 🟡 جلب الطلبات في الوقت الحقيقي
-export function listenToRequests(callback) {
+// 🟡 الاستماع المباشر للطلبات (Realtime) — الأحدث أولًا
+export function listenRequests(callback) {
   onValue(requestsRef, (snapshot) => {
     const data = snapshot.val() || {};
-    const list = Object.entries(data).map(([id, value]) => ({ id, ...value }));
-    callback(list);
+    // تحويل الكائن إلى مصفوفة
+    const list = Object.entries(data).map(([id, value]) => ({
+      id,
+      ...value,
+    }));
+    // ترتيب الطلبات بالأحدث أولاً حسب التاريخ
+    const sorted = list.sort(
+      (a, b) => new Date(b.receivedDate || 0) - new Date(a.receivedDate || 0)
+    );
+    callback(sorted);
   });
 }
 
@@ -48,16 +56,15 @@ export async function deleteRequest(id) {
 // ✅ نسخ صف واحد إلى Clipboard بترتيب الأعمدة الصحيح
 export async function copyRow(row) {
   const ordered = [
-    "",
-    "",
-    "",
-    "",
+    row.irNo || "-",
+    row.irRev || "-",
+    row.irLatestRev || "-",
+    row.hypwr || "-",
     row.desc || "-",
     row.location || "-",
     row.receivedDate || "-",
   ];
-
-  const text = ordered.join("\t"); // 🔹 Tab يفصل القيم لتكون أعمدة في Excel
+  const text = ordered.join("\t"); // 🔹 Tab يفصل القيم لتظهر كأعمدة في Excel
   await navigator.clipboard.writeText(text);
 }
 
@@ -65,24 +72,24 @@ export async function copyRow(row) {
 export async function copyAllRows(rows) {
   if (!rows || rows.length === 0) throw new Error("No data to copy");
 
-  // 🏷️ العناوين (Header Row)
+  // 🏷️ العناوين
   const header = [
-    "Inspection Request No",
+    "IR No",
     "IR Rev",
-    "IR Latest Rev",
+    "Latest Rev",
     "HYPWRLINK",
     "Description",
     "Location",
     "Received Date",
   ];
 
-  // 🧱 المحتوى
+  // 🧱 البيانات
   const content = rows.map((r) =>
     [
-      "",
-      "",
-      "",
-      "",
+      r.irNo || "-",
+      r.irRev || "-",
+      r.irLatestRev || "-",
+      r.hypwr || "-",
       r.desc || "-",
       r.location || "-",
       r.receivedDate || "-",

@@ -10,7 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "docx": "^9.5.1",
+    "docxtemplater": "^3.67.3",
+    "file-saver": "^2.0.5",
     "firebase": "^12.4.0",
+    "pizzip": "^3.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.4"
