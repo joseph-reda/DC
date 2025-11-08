@@ -20,7 +20,9 @@ const requestsRef = ref(db, "requests");
 // ---------------- Helper Functions ----------------
 function safeString(v, fallback = "") {
   if (v === null || v === undefined) return fallback;
-  return String(v).trim().replace(/[\t\r\n]+/g, " ");
+  return String(v)
+    .trim()
+    .replace(/[\t\r\n]+/g, " ");
 }
 
 // ---------------- API FUNCTIONS ----------------
@@ -31,7 +33,8 @@ export async function saveRequest(data) {
   const clean = {
     ...data,
     desc: data.desc?.trim() || "No Description", // Final Description
-    location: data.location?.trim() || (data.area ? data.area : "Not Specified"),
+    location:
+      data.location?.trim() || (data.area ? data.area : "Not Specified"),
     receivedDate: data.receivedDate || nowISO,
     irRev: data.irRev ?? "0",
     irLatestRev: data.irLatestRev ?? "L",
@@ -54,7 +57,9 @@ export function listenRequests(callback) {
     }));
 
     // ترتيب حسب التاريخ (الأحدث أولاً)
-    normalized.sort((a, b) => new Date(b.receivedDate) - new Date(a.receivedDate));
+    normalized.sort(
+      (a, b) => new Date(b.receivedDate) - new Date(a.receivedDate)
+    );
     callback(normalized);
   });
 }
@@ -87,7 +92,8 @@ export async function copyRow(r) {
 
 // 🟢 نسخ كل الصفوف بالترتيب الصحيح
 export async function copyAllRows(rows) {
-  if (!Array.isArray(rows) || rows.length === 0) throw new Error("No rows to copy");
+  if (!Array.isArray(rows) || rows.length === 0)
+    throw new Error("No rows to copy");
 
   const lines = rows.map((r) =>
     [
@@ -98,6 +104,7 @@ export async function copyAllRows(rows) {
       "",
       safeString(r.desc),
       safeString(r.location),
+      safeString(r.area),
       safeString(r.receivedDate),
     ].join("\t")
   );
