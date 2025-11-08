@@ -1,78 +1,99 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import RequestForm from "../components/RequestForm";
-import { saveRequest } from "../firebaseService";
-import PizZip from "pizzip";
-import Docxtemplater from "docxtemplater";
-import { saveAs } from "file-saver";
+import { saveRequest, listenRequests } from "../firebaseService";
 
 export default function EngineerPage() {
-    // 🟢 حفظ الطلب وإنشاء ملف Word بعد الحفظ
-    async function handleSave(data) {
+    const [nextIR, setNextIR] = useState("BADYA-CON-A1-IR-ARCH-001");
+
+    // 🟢 توليد رقم IR تلقائي بناءً على آخر رقم محفوظ
+    useEffect(() => {
+        const unsubscribe = listenRequests((data) => {
+            if (!data || data.length === 0) {
+                setNextIR("BADYA-CON-A1-IR-ARCH-001");
+                return;
+            }
+
+            // 🔹 استخراج آخر رقم IR وحساب الرقم التالي
+            const last = data
+                .map((r) => r.irNo)
+                .filter(Boolean)
+                .sort((a, b) => {
+                    const numA = parseInt(a.match(/\d+$/)?.[0] || 0);
+                    const numB = parseInt(b.match(/\d+$/)?.[0] || 0);
+                    return numB - numA;
+                })[0];
+
+            const lastNum = parseInt(last.match(/\d+$/)?.[0] || 0);
+            const nextNum = (lastNum + 1).toString().padStart(3, "0");
+            setNextIR(`BADYA-CON-A1-IR-ARCH-${nextNum}`);
+        });
+
+        return () => unsubscribe && unsubscribe();
+    }, []);
+
+    // 💾 حفظ الطلب الجديد
+    async function handleSave(formData) {
         try {
-            await saveRequest(data);
-            alert("✅ Request submitted successfully!");
-            await generateWordFile(data);
+            const today = new Date().toISOString().split("T")[0];
+
+            const finalData = {
+                ...formData,
+                irNo: nextIR, // رقم تلقائي
+                irLatestRev: "L",
+                hypwr: "HYPWRLINK",
+                desc: formData.desc?.trim() || "No Description",
+                receivedDate: formData.receivedDate || today,
+            };
+
+            await saveRequest(finalData);
+            alert(`✅ Request submitted successfully with No: ${nextIR}`);
         } catch (err) {
-            console.error(err);
+            console.error("❌ Error saving request:", err);
             alert("❌ Failed to submit request: " + (err.message || err));
         }
     }
 
-    // 🧠 توليد ملف Word من القالب
-    async function generateWordFile(data) {
-        try {
-            // تحميل القالب من مجلد public
-            const response = await fetch("/template.docx");
-            const blob = await response.blob();
-
-            // قراءة القالب وتحضيره
-            const zip = new PizZip(await blob.arrayBuffer());
-            const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-
-            // تمرير البيانات الديناميكية
-            doc.setData({
-                Subject: data.desc || "",
-                Date: data.receivedDate || "",
-                SubmittalNo: data.irNo || "",
-            });
-
-            // توليد الملف النهائي
-            doc.render();
-            const output = doc.getZip().generate({ type: "blob" });
-
-            // تحميل الملف باسم مميز
-            saveAs(output, `IR-${data.irNo || "Request"}.docx`);
-        } catch (err) {
-            console.error("Word generation error:", err);
-            alert("❌ Failed to generate Word file");
-        }
-    }
-
     return (
-        <div
-            className="engineer-page"
-            style={{
-                padding: "2rem",
-                maxWidth: "850px",
-                margin: "2rem auto",
-                backgroundColor: "#fff",
-                borderRadius: "12px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-            }}
-        >
-            <h2
-                style={{
-                    color: "#2563eb",
-                    marginBottom: "1.5rem",
-                    textAlign: "center",
-                    fontWeight: "600",
-                    fontSize: "1.5rem",
-                }}
-            >
-                👷 Engineer – Submit Inspection Request
-            </h2>
+        <div style={styles.container}>
+            <h2 style={styles.title}>👷 Engineer – Submit Inspection Request</h2>
 
-            <RequestForm onSaved={handleSave} />
+            <div style={styles.card}>
+                <RequestForm
+                    onSaved={handleSave}
+                    hiddenIR={true}
+                    fixedIR={nextIR}
+                    hideLatestRev={true}
+                    hideHypwr={true}
+                />
+            </div>
         </div>
     );
 }
+
+// 🎨 تنسيقات احترافية ومتناغمة
+const styles = {
+    container: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        padding: "3rem 1rem",
+        backgroundColor: "#f8fafc",
+        minHeight: "100vh",
+        fontFamily: "Inter, sans-serif",
+    },
+    title: {
+        color: "#2563eb",
+        fontSize: "1.6rem",
+        fontWeight: "700",
+        marginBottom: "1.5rem",
+        textAlign: "center",
+    },
+    card: {
+        backgroundColor: "#ffffff",
+        borderRadius: "12px",
+        boxShadow: "0 4px 14px rgba(0, 0, 0, 0.08)",
+        padding: "2rem 1.5rem",
+        width: "100%",
+        maxWidth: "700px",
+    },
+};

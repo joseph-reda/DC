@@ -1,15 +1,7 @@
-// ✅ Firebase setup
 import { initializeApp } from "firebase/app";
-import {
-  getDatabase,
-  ref,
-  push,
-  get,
-  remove,
-  onValue,
-} from "firebase/database";
+import { getDatabase, ref, push, remove, onValue } from "firebase/database";
 
-// ⚙️ إعدادات Firebase
+// ---------------- Firebase Config ----------------
 const firebaseConfig = {
   apiKey: "AIzaSyDZCjiFFhhHeLvHHSPlil4xYxMV7ro6OVc",
   authDomain: "dc-contech.firebaseapp.com",
@@ -21,81 +13,94 @@ const firebaseConfig = {
   measurementId: "G-HGLV4NXQHT",
 };
 
-// ✅ تهيئة Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const requestsRef = ref(db, "requests");
 
-// 🟢 حفظ طلب جديد
-export async function saveRequest(data) {
-  await push(requestsRef, data);
+// ---------------- Helper Functions ----------------
+function safeString(v, fallback = "") {
+  if (v === null || v === undefined) return fallback;
+  return String(v).trim().replace(/[\t\r\n]+/g, " ");
 }
 
-// 🟡 الاستماع المباشر للطلبات (Realtime) — الأحدث أولًا
+// ---------------- API FUNCTIONS ----------------
+
+// 🟢 حفظ الطلب
+export async function saveRequest(data) {
+  const nowISO = new Date().toISOString().split("T")[0];
+  const clean = {
+    ...data,
+    desc: data.desc?.trim() || "No Description", // Final Description
+    location: data.location?.trim() || (data.area ? data.area : "Not Specified"),
+    receivedDate: data.receivedDate || nowISO,
+    irRev: data.irRev ?? "0",
+    irLatestRev: data.irLatestRev ?? "L",
+    hypwr: data.hypwr ?? "HYPWRLINK",
+  };
+  await push(requestsRef, clean);
+}
+
+// 🟣 جلب الطلبات بشكل فوري (Realtime)
 export function listenRequests(callback) {
-  onValue(requestsRef, (snapshot) => {
+  return onValue(requestsRef, (snapshot) => {
     const data = snapshot.val() || {};
-    // تحويل الكائن إلى مصفوفة
-    const list = Object.entries(data).map(([id, value]) => ({
-      id,
-      ...value,
+    const list = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+
+    const normalized = list.map((r) => ({
+      ...r,
+      desc: r.desc || "No Description",
+      location: r.location || (r.area ?? "Not Specified"),
+      receivedDate: r.receivedDate || new Date().toISOString().split("T")[0],
     }));
-    // ترتيب الطلبات بالأحدث أولاً حسب التاريخ
-    const sorted = list.sort(
-      (a, b) => new Date(b.receivedDate || 0) - new Date(a.receivedDate || 0)
-    );
-    callback(sorted);
+
+    // ترتيب حسب التاريخ (الأحدث أولاً)
+    normalized.sort((a, b) => new Date(b.receivedDate) - new Date(a.receivedDate));
+    callback(normalized);
   });
 }
 
-// 🔴 حذف طلب
+// 🔴 حذف الطلب
 export async function deleteRequest(id) {
-  await remove(ref(db, `requests/${id}`));
+  if (!id) throw new Error("Missing id");
+  const nodeRef = ref(db, `requests/${id}`);
+  await remove(nodeRef);
 }
 
-// ✅ نسخ صف واحد إلى Clipboard بترتيب الأعمدة الصحيح
-export async function copyRow(row) {
-  const ordered = [
-    row.irNo || "-",
-    row.irRev || "-",
-    row.irLatestRev || "-",
-    row.hypwr || "-",
-    row.desc || "-",
-    row.location || "-",
-    row.receivedDate || "-",
-  ];
-  const text = ordered.join("\t"); // 🔹 Tab يفصل القيم لتظهر كأعمدة في Excel
-  await navigator.clipboard.writeText(text);
+// 🟢 نسخ صف واحد فقط
+export async function copyRow(r) {
+  if (!r) throw new Error("Invalid row data");
+  const rowText = [
+    safeString(r.irNo),
+    safeString(r.irRev),
+    safeString(r.hypwr),
+    safeString(r.irLatestRev),
+    "",
+    safeString(r.desc),
+    safeString(r.location),
+    safeString(r.receivedDate),
+  ].join("\t");
+
+  await navigator.clipboard.writeText(rowText);
+  return rowText;
 }
 
-// ✅ نسخ جميع الصفوف إلى Clipboard بترتيب الأعمدة الصحيح
+// 🟢 نسخ كل الصفوف بالترتيب الصحيح
 export async function copyAllRows(rows) {
-  if (!rows || rows.length === 0) throw new Error("No data to copy");
+  if (!Array.isArray(rows) || rows.length === 0) throw new Error("No rows to copy");
 
-  // 🏷️ العناوين
-  const header = [
-    "IR No",
-    "IR Rev",
-    "Latest Rev",
-    "HYPWRLINK",
-    "Description",
-    "Location",
-    "Received Date",
-  ];
-
-  // 🧱 البيانات
-  const content = rows.map((r) =>
+  const lines = rows.map((r) =>
     [
-      r.irNo || "-",
-      r.irRev || "-",
-      r.irLatestRev || "-",
-      r.hypwr || "-",
-      r.desc || "-",
-      r.location || "-",
-      r.receivedDate || "-",
+      safeString(r.irNo),
+      safeString(r.irRev),
+      safeString(r.hypwr),
+      safeString(r.irLatestRev),
+      safeString(r.desc),
+      safeString(r.location),
+      safeString(r.receivedDate),
     ].join("\t")
   );
 
-  const text = [header.join("\t"), ...content].join("\n");
-  await navigator.clipboard.writeText(text);
+  const allText = lines.join("\n");
+  await navigator.clipboard.writeText(allText);
+  return allText;
 }

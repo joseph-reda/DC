@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
 
-export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDeleteRow }) {
+export default function RequestsTable({
+    onListen,
+    onCopyRow,
+    onCopyAll,
+    onDeleteRow,
+    onDownloadWord,
+}) {
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // 🟡 الاستماع لتحديثات Firebase
+    // 🟢 الاستماع المباشر من Firebase
     useEffect(() => {
         const unsubscribe = onListen((data) => {
             setRows(data);
@@ -13,177 +19,249 @@ export default function RequestsTable({ onListen, onCopyRow, onCopyAll, onDelete
         return () => unsubscribe && unsubscribe();
     }, [onListen]);
 
-    // 🔴 حذف صف واحد
+    // 🗑️ حذف صف واحد
     async function handleDelete(id) {
         if (!window.confirm("Are you sure you want to delete this request?")) return;
         try {
             await onDeleteRow(id);
-            alert("🗑️ Deleted successfully!");
+            alert("🗑️ Request deleted successfully!");
         } catch (err) {
             alert("❌ Failed to delete: " + err.message);
         }
     }
 
-    // 🔵 نسخ صف واحد
+    // 📋 نسخ صف واحد
     async function handleCopyRow(row) {
         try {
             await onCopyRow(row);
-            alert("✅ Copied row to clipboard!");
+            alert("✅ Row copied to clipboard!");
         } catch {
             alert("❌ Failed to copy row");
         }
     }
 
-    // 🟣 نسخ جميع الصفوف
+    // 📋 نسخ جميع الصفوف
     async function handleCopyAll() {
-        if (rows.length === 0) {
-            alert("⚠️ No data to copy");
-            return;
-        }
+        if (rows.length === 0) return alert("⚠️ No data to copy");
         try {
             await onCopyAll(rows);
-            alert("✅ All rows copied to clipboard!");
+            alert("✅ All rows copied successfully!");
         } catch {
             alert("❌ Failed to copy all rows");
         }
     }
 
+    // 💾 تحميل ملف Word
+    async function handleDownloadWord(row) {
+        try {
+            if (!onDownloadWord) return alert("❌ Download function not provided");
+            await onDownloadWord(row);
+        } catch (err) {
+            console.error(err);
+            alert("❌ Failed to generate Word file");
+        }
+    }
+
     return (
-        <div
-            className="requests-table"
-            style={{
-                width: "95%",
-                margin: "2rem auto",
-                background: "#fff",
-                borderRadius: "10px",
-                padding: "1rem",
-                boxShadow: "0 3px 12px rgba(0,0,0,0.08)",
-            }}
-        >
-            {/* 🔹 أزرار التحكم */}
-            <div
-                className="actions"
-                style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    gap: "1rem",
-                    marginBottom: "1rem",
-                }}
-            >
-                <button
-                    onClick={handleCopyAll}
-                    style={{
-                        background: "#2563eb",
-                        color: "white",
-                        padding: "0.5rem 1rem",
-                        borderRadius: "6px",
-                        border: "none",
-                        cursor: "pointer",
-                        fontWeight: "500",
-                    }}
-                >
+        <div style={styles.wrapper}>
+            {/* 🔹 الأزرار العلوية */}
+            <div style={styles.actions}>
+                <button onClick={handleCopyAll} style={styles.copyAllBtn}>
                     📋 Copy All
                 </button>
             </div>
 
             {/* 🔸 الجدول */}
-            <table
-                border="1"
-                cellPadding="8"
-                style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    textAlign: "left",
-                    fontSize: "0.95rem",
-                }}
-            >
-                <thead style={{ background: "#f1f5f9", fontWeight: "bold" }}>
-                    <tr>
-                        <th>IR No</th>
-                        <th>IR Rev.</th>
-                        <th>Latest Rev.</th>
-                        <th>HYPWRLINK</th>
-                        <th>Description</th>
-                        <th>Location</th>
-                        <th>Received Date</th>
-                        <th style={{ textAlign: "center" }}>Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {loading ? (
+            <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                    <thead style={styles.thead}>
                         <tr>
-                            <td colSpan="8" style={{ textAlign: "center", color: "#555" }}>
-                                ⏳ Loading...
-                            </td>
+                            <th style={styles.th}>IR No</th>
+                            <th style={styles.th}>IR Rev.</th>
+                            <th style={styles.th}>Latest Rev.</th>
+                            <th style={styles.th}>HYPWRLINK</th>
+                            <th style={styles.th}>Description</th>
+                            <th style={styles.th}>Location</th>
+                            <th style={styles.th}>Received Date</th>
+                            <th style={{ ...styles.th, textAlign: "center" }}>Actions</th>
                         </tr>
-                    ) : rows.length === 0 ? (
-                        <tr>
-                            <td colSpan="8" style={{ textAlign: "center", color: "#888" }}>
-                                No data found
-                            </td>
-                        </tr>
-                    ) : (
-                        rows.map((r) => (
-                            <tr key={r.id} style={{ borderBottom: "1px solid #eee" }}>
-                                <td>{r.irNo || "-"}</td>
-                                <td>{r.irRev || "-"}</td>
-                                <td>{r.irLatestRev || "-"}</td>
-                                <td>
-                                    {r.hypwr ? (
-                                        <a
-                                            href={r.hypwr}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            style={{
-                                                color: "#2563eb",
-                                                textDecoration: "underline",
-                                            }}
-                                        >
-                                            Link
-                                        </a>
-                                    ) : (
-                                        "-"
-                                    )}
-                                </td>
-                                <td style={{ maxWidth: "250px", whiteSpace: "normal" }}>{r.desc || "-"}</td>
-                                <td>{r.location || "-"}</td>
-                                <td>{r.receivedDate || "-"}</td>
+                    </thead>
 
-                                <td style={{ textAlign: "center" }}>
-                                    <button
-                                        onClick={() => handleCopyRow(r)}
-                                        style={{
-                                            marginRight: "0.5rem",
-                                            background: "#22c55e",
-                                            color: "#fff",
-                                            border: "none",
-                                            padding: "0.3rem 0.7rem",
-                                            borderRadius: "5px",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        📄 Copy
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(r.id)}
-                                        style={{
-                                            background: "#ef4444",
-                                            color: "#fff",
-                                            border: "none",
-                                            padding: "0.3rem 0.7rem",
-                                            borderRadius: "5px",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        🗑️ Delete
-                                    </button>
+                    <tbody>
+                        {loading ? (
+                            <tr>
+                                <td colSpan="8" style={styles.loadingCell}>
+                                    ⏳ Loading requests...
                                 </td>
                             </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
+                        ) : rows.length === 0 ? (
+                            <tr>
+                                <td colSpan="8" style={styles.noDataCell}>
+                                    No requests found
+                                </td>
+                            </tr>
+                        ) : (
+                            rows.map((r, idx) => (
+                                <tr
+                                    key={r.id || idx}
+                                    style={{
+                                        ...styles.tr,
+                                        backgroundColor: idx % 2 === 0 ? "#f9fafb" : "#ffffff",
+                                    }}
+                                >
+                                    <td style={styles.td}>{r.irNo || "-"}</td>
+                                    <td style={styles.td}>{r.irRev || "-"}</td>
+                                    <td style={styles.td}>{r.irLatestRev || "-"}</td>
+                                    <td style={styles.td}>
+                                        {r.hypwr ? (
+                                            <a
+                                                href={r.hypwr}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                style={styles.link}
+                                            >
+                                                Link
+                                            </a>
+                                        ) : (
+                                            "-"
+                                        )}
+                                    </td>
+                                    <td style={{ ...styles.td, maxWidth: "280px", whiteSpace: "normal" }}>
+                                        {r.desc || "-"}
+                                    </td>
+                                    <td style={styles.td}>{r.location || "-"}</td>
+                                    <td style={styles.td}>{r.receivedDate || "-"}</td>
+
+                                    {/* الأزرار */}
+                                    <td style={{ ...styles.td, textAlign: "center" }}>
+                                        <button
+                                            onClick={() => handleCopyRow(r)}
+                                            style={styles.btnCopy}
+                                            title="Copy Row"
+                                        >
+                                            📋
+                                        </button>
+                                        <button
+                                            onClick={() => handleDownloadWord(r)}
+                                            style={styles.btnDownload}
+                                            title="Download Word"
+                                        >
+                                            💾
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(r.id)}
+                                            style={styles.btnDelete}
+                                            title="Delete"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
+
+// 🎨 تنسيقات حديثة وأنيقة
+const styles = {
+    wrapper: {
+        width: "95%",
+        margin: "2rem auto",
+        background: "#ffffff",
+        borderRadius: "12px",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+        padding: "1.5rem",
+        fontFamily: "Inter, sans-serif",
+    },
+    actions: {
+        display: "flex",
+        justifyContent: "flex-end",
+        marginBottom: "1rem",
+    },
+    copyAllBtn: {
+        background: "#2563eb",
+        color: "#fff",
+        padding: "0.6rem 1.2rem",
+        borderRadius: "8px",
+        border: "none",
+        cursor: "pointer",
+        fontWeight: "600",
+        fontSize: "0.95rem",
+        transition: "background 0.3s ease",
+    },
+    tableContainer: {
+        overflowX: "auto",
+    },
+    table: {
+        width: "100%",
+        borderCollapse: "collapse",
+        fontSize: "0.95rem",
+    },
+    thead: {
+        background: "#f1f5f9",
+        color: "#1e293b",
+        textTransform: "uppercase",
+    },
+    th: {
+        padding: "0.75rem",
+        textAlign: "left",
+        borderBottom: "2px solid #cbd5e1",
+        fontWeight: "600",
+        fontSize: "0.9rem",
+    },
+    tr: {
+        borderBottom: "1px solid #e5e7eb",
+        transition: "background 0.2s",
+    },
+    td: {
+        padding: "0.75rem",
+        color: "#334155",
+        fontSize: "0.9rem",
+        verticalAlign: "top",
+    },
+    link: {
+        color: "#2563eb",
+        textDecoration: "underline",
+        fontWeight: "500",
+    },
+    loadingCell: {
+        textAlign: "center",
+        color: "#555",
+        padding: "1rem",
+    },
+    noDataCell: {
+        textAlign: "center",
+        color: "#777",
+        padding: "1rem",
+    },
+    btnCopy: {
+        background: "#22c55e",
+        color: "#fff",
+        padding: "0.4rem 0.8rem",
+        border: "none",
+        borderRadius: "6px",
+        cursor: "pointer",
+        marginRight: "0.4rem",
+    },
+    btnDownload: {
+        background: "#0ea5e9",
+        color: "#fff",
+        padding: "0.4rem 0.8rem",
+        border: "none",
+        borderRadius: "6px",
+        cursor: "pointer",
+        marginRight: "0.4rem",
+    },
+    btnDelete: {
+        background: "#ef4444",
+        color: "#fff",
+        padding: "0.4rem 0.8rem",
+        border: "none",
+        borderRadius: "6px",
+        cursor: "pointer",
+    },
+};

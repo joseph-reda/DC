@@ -23,7 +23,7 @@ export default function Navbar() {
                     letterSpacing: "0.5px",
                 }}
             >
-                🏗️ Inspection System
+                🏗️ DC System
             </span>
 
             <div className="nav-links" style={{ display: "flex", gap: "1rem" }}>
@@ -56,7 +56,7 @@ export default function Navbar() {
                         transition: "0.3s",
                     }}
                 >
-                    Document Controller
+                    DC
                 </Link>
             </div>
         </nav>
