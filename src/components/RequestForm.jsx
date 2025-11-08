@@ -78,8 +78,8 @@ export default function RequestForm({ onSaved }) {
             <input type="hidden" id="irLatestRev" value="L" readOnly />
             <input type="hidden" id="hypwr" value="HYPWRLINK" readOnly />
 
-            <label style={styles.label}>IR Rev.:</label>
-            <input id="irRev" value={form.irRev} onChange={handleChange} style={styles.input} />
+            {/* <label style={styles.label}>IR Rev.:</label>
+            <input id="irRev" value={form.irRev} onChange={handleChange} style={styles.input} /> */}
 
             <label style={styles.label}>Type of Work:</label>
             <select id="workType" value={form.workType} onChange={handleChange} style={styles.select}>
@@ -103,8 +103,8 @@ export default function RequestForm({ onSaved }) {
             <label style={styles.label}>Final Description (editable):</label>
             <input id="desc" value={form.desc} onChange={handleChange} placeholder="Enter or edit final description" style={styles.inputDesc} />
 
-            <label style={styles.label}>Received Date:</label>
-            <input type="date" id="receivedDate" value={form.receivedDate} onChange={handleChange} style={styles.input} />
+            {/* <label style={styles.label}>Received Date:</label>
+            <input type="date" id="receivedDate" value={form.receivedDate} onChange={handleChange} style={styles.input} /> */}
 
             <button type="submit" disabled={saving} style={styles.submitBtn}>
                 {saving ? "Saving..." : "💾 Save Request"}

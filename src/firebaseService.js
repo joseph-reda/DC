@@ -77,6 +77,7 @@ export async function copyRow(r) {
     "",
     safeString(r.desc),
     safeString(r.location),
+    safeString(r.area),
     safeString(r.receivedDate),
   ].join("\t");
 
@@ -94,6 +95,7 @@ export async function copyAllRows(rows) {
       safeString(r.irRev),
       safeString(r.hypwr),
       safeString(r.irLatestRev),
+      "",
       safeString(r.desc),
       safeString(r.location),
       safeString(r.receivedDate),
