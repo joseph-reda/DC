@@ -89,44 +89,66 @@ export default function DcPage() {
     }
 
     return (
-        <div style={styles.container}>
-            <h2 style={styles.title}>📁 Document Controller – Inspection Requests</h2>
+        <div className="min-h-screen bg-gray-50 p-6 font-sans">
+            <h2 className="text-2xl font-bold text-blue-700 text-center mb-6">
+                📁 Document Controller – Inspection Requests
+            </h2>
+
             {/* 🔹 Copy All */}
-            <div style={{ textAlign: "right", margin: "1rem 0" }}>
-                <button onClick={handleCopyAll} style={styles.copyAllBtn}>
+            <div className="flex justify-end mb-4">
+                <button
+                    onClick={handleCopyAll}
+                    className="bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-800 transition"
+                >
                     📋 Copy All
                 </button>
             </div>
 
             {/* 🔸 Table */}
             {loading ? (
-                <p style={styles.loading}>⏳ Loading requests...</p>
+                <p className="text-center text-gray-500 italic">⏳ Loading requests...</p>
             ) : requests.length === 0 ? (
-                <p style={styles.noData}>No requests found.</p>
+                <p className="text-center text-gray-500 italic">No requests found.</p>
             ) : (
-                <div style={styles.tableContainer}>
-                    <table style={styles.table}>
+                <div className="overflow-x-auto bg-white rounded-xl shadow-md p-3">
+                    <table className="w-full border-collapse min-w-[750px]">
                         <thead>
-                            <tr>
-                                <th style={styles.th}>Description</th>
-                                <th style={styles.th}>Location</th>
-                                <th style={styles.th}>Received Date</th>
-                                <th style={{ ...styles.th, textAlign: "center" }}>Actions</th>
+                            <tr className="bg-gray-100 border-b-2 border-gray-300 text-gray-700 uppercase text-sm">
+                                <th className="text-left px-4 py-2">Description</th>
+                                <th className="text-left px-4 py-2">Location</th>
+                                <th className="text-left px-4 py-2">Received Date</th>
+                                <th className="text-center px-4 py-2">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {requests.map((r, idx) => (
                                 <tr
                                     key={r.id || idx}
-                                    style={{ background: idx % 2 === 0 ? "#f9fafb" : "#fff" }}
+                                    className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+                                        }`}
                                 >
-                                    <td style={styles.td}>{r.desc}</td>
-                                    <td style={styles.td}>{r.location}</td>
-                                    <td style={styles.td}>{r.receivedDate}</td>
-                                    <td style={{ ...styles.td, textAlign: "center" }}>
-                                        <button onClick={() => handleCopyRow(r)} style={styles.btnCopy}>📋Copy</button>
-                                        <button onClick={() => generateWordFile(r)} style={styles.btnDownload}>💾Download</button>
-                                        <button onClick={() => handleDelete(r.id)} style={styles.btnDelete}>🗑️Delete</button>
+                                    <td className="px-4 py-2 text-gray-700">{r.desc}</td>
+                                    <td className="px-4 py-2 text-gray-700">{r.location}</td>
+                                    <td className="px-4 py-2 text-gray-700">{r.receivedDate}</td>
+                                    <td className="px-4 py-2 text-center space-x-2">
+                                        <button
+                                            onClick={() => handleCopyRow(r)}
+                                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                                        >
+                                            📋 Copy
+                                        </button>
+                                        <button
+                                            onClick={() => generateWordFile(r)}
+                                            className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1 rounded-md text-sm"
+                                        >
+                                            💾 Download
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(r.id)}
+                                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                                        >
+                                            🗑️ Delete
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -137,21 +159,3 @@ export default function DcPage() {
         </div>
     );
 }
-
-// 🎨 Enhanced Styles
-const styles = {
-    container: { padding: "2rem", background: "#f3f4f6", minHeight: "100vh", fontFamily: "Inter, sans-serif" },
-    title: { color: "#1e40af", textAlign: "center", marginBottom: "1.5rem", fontWeight: "700", fontSize: "1.6rem" },
-    card: { background: "#ffffff", borderRadius: "12px", padding: "1.5rem", boxShadow: "0 6px 20px rgba(0,0,0,0.08)", marginBottom: "1.5rem" },
-    copyAllBtn: { background: "#1e40af", color: "#fff", padding: "0.7rem 1.2rem", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem", transition: "all 0.2s" },
-    tableContainer: { overflowX: "auto", background: "#fff", borderRadius: "12px", boxShadow: "0 4px 14px rgba(0,0,0,0.06)", padding: "0.5rem" },
-    table: { width: "100%", borderCollapse: "collapse", minWidth: "750px" },
-    th: { padding: "0.75rem 1rem", textAlign: "left", borderBottom: "2px solid #cbd5e1", fontWeight: "700", fontSize: "0.95rem", color: "#1e293b" },
-    td: { padding: "0.65rem 1rem", fontSize: "0.93rem", color: "#334155" },
-    link: { color: "#2563eb", textDecoration: "underline", fontWeight: "500" },
-    loading: { textAlign: "center", color: "#555", fontStyle: "italic" },
-    noData: { textAlign: "center", color: "#777", fontStyle: "italic" },
-    btnCopy: { background: "#22c55e", color: "#fff", padding: "0.4rem 0.8rem", border: "none", borderRadius: "6px", cursor: "pointer", marginRight: "0.3rem", transition: "0.2s" },
-    btnDownload: { background: "#0ea5e9", color: "#fff", padding: "0.4rem 0.8rem", border: "none", borderRadius: "6px", cursor: "pointer", marginRight: "0.3rem", transition: "0.2s" },
-    btnDelete: { background: "#ef4444", color: "#fff", padding: "0.4rem 0.8rem", border: "none", borderRadius: "6px", cursor: "pointer", transition: "0.2s" },
-};

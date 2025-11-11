@@ -7,16 +7,10 @@ export default function LoginPage() {
     const [message, setMessage] = useState("");
     const navigate = useNavigate();
 
-    // 🔑 بيانات الدخول (يمكنك تعديلها لاحقًا)
-    const ADMIN = {
-        username: "admin",
-        password: "1234",
-    };
+    const ADMIN = { username: "admin", password: "1234" };
 
-    // 🟢 تسجيل الدخول
     function handleLogin(e) {
         e.preventDefault();
-
         if (username === ADMIN.username && password === ADMIN.password) {
             localStorage.setItem("user", username);
             navigate("/dc");
@@ -26,93 +20,46 @@ export default function LoginPage() {
     }
 
     return (
-        <div
-            style={{
-                maxWidth: "400px",
-                margin: "3rem auto",
-                padding: "2rem",
-                border: "1px solid #ccc",
-                borderRadius: "12px",
-                background: "#f9fafb",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                fontFamily: "system-ui, sans-serif",
-            }}
-        >
-            <h2
-                style={{
-                    textAlign: "center",
-                    color: "#2563eb",
-                    marginBottom: "1rem",
-                }}
-            >
+        <div className="max-w-sm mx-auto mt-16 p-8 bg-gray-50 rounded-xl shadow-md font-sans">
+            <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">
                 🔐 تسجيل الدخول
             </h2>
 
-            <form onSubmit={handleLogin}>
-                <label style={{ display: "block", marginBottom: "0.5rem" }}>
-                    👤 اسم المستخدم:
-                </label>
-                <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="مثلاً admin"
-                    required
-                    style={{
-                        width: "100%",
-                        padding: "0.5rem",
-                        marginBottom: "1rem",
-                        border: "1px solid #ccc",
-                        borderRadius: "6px",
-                    }}
-                />
+            <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                    <label className="block mb-1 text-gray-700">👤 اسم المستخدم:</label>
+                    <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="مثلاً admin"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
 
-                <label style={{ display: "block", marginBottom: "0.5rem" }}>
-                    🔑 كلمة المرور:
-                </label>
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="مثلاً 1234"
-                    required
-                    style={{
-                        width: "100%",
-                        padding: "0.5rem",
-                        marginBottom: "1rem",
-                        border: "1px solid #ccc",
-                        borderRadius: "6px",
-                    }}
-                />
+                <div>
+                    <label className="block mb-1 text-gray-700">🔑 كلمة المرور:</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="مثلاً 1234"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
 
                 <button
                     type="submit"
-                    style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        background: "#2563eb",
-                        color: "#fff",
-                        fontWeight: "bold",
-                        border: "none",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                    }}
+                    className="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
                 >
                     🚪 تسجيل الدخول
                 </button>
             </form>
 
             {message && (
-                <p
-                    style={{
-                        marginTop: "1rem",
-                        color: "red",
-                        textAlign: "center",
-                        fontWeight: "bold",
-                    }}
-                >
-                    {message}
-                </p>
+                <p className="mt-4 text-center text-red-600 font-bold">{message}</p>
             )}
         </div>
     );

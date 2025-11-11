@@ -77,12 +77,10 @@ export async function copyRow(r) {
   const rowText = [
     safeString(r.irNo),
     safeString(r.irRev),
-    safeString(r.hypwr),
     safeString(r.irLatestRev),
-    "",
+    safeString(r.hypwr),
     safeString(r.desc),
     safeString(r.location),
-    safeString(r.area),
     safeString(r.receivedDate),
   ].join("\t");
 
@@ -99,12 +97,10 @@ export async function copyAllRows(rows) {
     [
       safeString(r.irNo),
       safeString(r.irRev),
-      safeString(r.hypwr),
       safeString(r.irLatestRev),
-      "",
+      safeString(r.hypwr),
       safeString(r.desc),
       safeString(r.location),
-      safeString(r.area),
       safeString(r.receivedDate),
     ].join("\t")
   );

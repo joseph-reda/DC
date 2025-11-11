@@ -19,7 +19,7 @@ export default function RequestsTable({
         return () => unsubscribe && unsubscribe();
     }, [onListen]);
 
-    // 🗑️ حذف صف واحد
+    // 🗑️ حذف صف
     async function handleDelete(id) {
         if (!window.confirm("Are you sure you want to delete this request?")) return;
         try {
@@ -30,7 +30,7 @@ export default function RequestsTable({
         }
     }
 
-    // 📋 نسخ صف واحد
+    // 📋 نسخ صف
     async function handleCopyRow(row) {
         try {
             await onCopyRow(row);
@@ -51,7 +51,7 @@ export default function RequestsTable({
         }
     }
 
-    // 💾 تحميل ملف Word
+    // 💾 تحميل Word
     async function handleDownloadWord(row) {
         try {
             if (!onDownloadWord) return alert("❌ Download function not provided");
@@ -63,40 +63,49 @@ export default function RequestsTable({
     }
 
     return (
-        <div style={styles.wrapper}>
+        <div className="w-[95%] mx-auto my-6 bg-white rounded-2xl shadow-lg p-4 sm:p-6 overflow-hidden">
             {/* 🔹 الأزرار العلوية */}
-            <div style={styles.actions}>
-                <button onClick={handleCopyAll} style={styles.copyAllBtn}>
+            <div className="flex justify-end mb-4">
+                <button
+                    onClick={handleCopyAll}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all duration-200 active:scale-[0.97]"
+                >
                     📋 Copy All
                 </button>
             </div>
 
             {/* 🔸 الجدول */}
-            <div style={styles.tableContainer}>
-                <table style={styles.table}>
-                    <thead style={styles.thead}>
+            <div className="overflow-x-auto">
+                <table className="min-w-full border-collapse text-sm">
+                    <thead className="bg-slate-100 text-slate-700 uppercase text-xs">
                         <tr>
-                            <th style={styles.th}>IR No</th>
-                            <th style={styles.th}>IR Rev.</th>
-                            <th style={styles.th}>Latest Rev.</th>
-                            <th style={styles.th}>HYPWRLINK</th>
-                            <th style={styles.th}>Description</th>
-                            <th style={styles.th}>Location</th>
-                            <th style={styles.th}>Received Date</th>
-                            <th style={{ ...styles.th, textAlign: "center" }}>Actions</th>
+                            <th className="p-3 text-left font-semibold border-b">IR No</th>
+                            <th className="p-3 text-left font-semibold border-b">IR Rev.</th>
+                            <th className="p-3 text-left font-semibold border-b">
+                                Latest Rev.
+                            </th>
+                            <th className="p-3 text-left font-semibold border-b">HYPWRLINK</th>
+                            <th className="p-3 text-left font-semibold border-b w-[250px]">
+                                Description
+                            </th>
+                            <th className="p-3 text-left font-semibold border-b">Location</th>
+                            <th className="p-3 text-left font-semibold border-b">
+                                Received Date
+                            </th>
+                            <th className="p-3 text-center font-semibold border-b">Actions</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="8" style={styles.loadingCell}>
+                                <td colSpan="8" className="text-center py-4 text-slate-500">
                                     ⏳ Loading requests...
                                 </td>
                             </tr>
                         ) : rows.length === 0 ? (
                             <tr>
-                                <td colSpan="8" style={styles.noDataCell}>
+                                <td colSpan="8" className="text-center py-4 text-slate-500">
                                     No requests found
                                 </td>
                             </tr>
@@ -104,21 +113,19 @@ export default function RequestsTable({
                             rows.map((r, idx) => (
                                 <tr
                                     key={r.id || idx}
-                                    style={{
-                                        ...styles.tr,
-                                        backgroundColor: idx % 2 === 0 ? "#f9fafb" : "#ffffff",
-                                    }}
+                                    className={`border-b transition-colors duration-150 ${idx % 2 === 0 ? "bg-slate-50" : "bg-white"
+                                        } hover:bg-slate-100`}
                                 >
-                                    <td style={styles.td}>{r.irNo || "-"}</td>
-                                    <td style={styles.td}>{r.irRev || "-"}</td>
-                                    <td style={styles.td}>{r.irLatestRev || "-"}</td>
-                                    <td style={styles.td}>
+                                    <td className="p-3">{r.irNo || "-"}</td>
+                                    <td className="p-3">{r.irRev || "-"}</td>
+                                    <td className="p-3">{r.irLatestRev || "-"}</td>
+                                    <td className="p-3">
                                         {r.hypwr ? (
                                             <a
                                                 href={r.hypwr}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                style={styles.link}
+                                                className="text-blue-600 hover:underline"
                                             >
                                                 Link
                                             </a>
@@ -126,31 +133,28 @@ export default function RequestsTable({
                                             "-"
                                         )}
                                     </td>
-                                    <td style={{ ...styles.td, maxWidth: "280px", whiteSpace: "normal" }}>
-                                        {r.desc || "-"}
-                                    </td>
-                                    <td style={styles.td}>{r.location || "-"}</td>
-                                    <td style={styles.td}>{r.receivedDate || "-"}</td>
+                                    <td className="p-3 break-words max-w-[280px]">{r.desc || "-"}</td>
+                                    <td className="p-3">{r.location || "-"}</td>
+                                    <td className="p-3">{r.receivedDate || "-"}</td>
 
-                                    {/* الأزرار */}
-                                    <td style={{ ...styles.td, textAlign: "center" }}>
+                                    <td className="p-3 text-center space-x-2">
                                         <button
                                             onClick={() => handleCopyRow(r)}
-                                            style={styles.btnCopy}
+                                            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs transition-all duration-200"
                                             title="Copy Row"
                                         >
                                             📋
                                         </button>
                                         <button
                                             onClick={() => handleDownloadWord(r)}
-                                            style={styles.btnDownload}
+                                            className="bg-sky-500 hover:bg-sky-600 text-white px-2 py-1 rounded-md text-xs transition-all duration-200"
                                             title="Download Word"
                                         >
                                             💾
                                         </button>
                                         <button
                                             onClick={() => handleDelete(r.id)}
-                                            style={styles.btnDelete}
+                                            className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-xs transition-all duration-200"
                                             title="Delete"
                                         >
                                             🗑️
@@ -165,103 +169,3 @@ export default function RequestsTable({
         </div>
     );
 }
-
-// 🎨 تنسيقات حديثة وأنيقة
-const styles = {
-    wrapper: {
-        width: "95%",
-        margin: "2rem auto",
-        background: "#ffffff",
-        borderRadius: "12px",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-        padding: "1.5rem",
-        fontFamily: "Inter, sans-serif",
-    },
-    actions: {
-        display: "flex",
-        justifyContent: "flex-end",
-        marginBottom: "1rem",
-    },
-    copyAllBtn: {
-        background: "#2563eb",
-        color: "#fff",
-        padding: "0.6rem 1.2rem",
-        borderRadius: "8px",
-        border: "none",
-        cursor: "pointer",
-        fontWeight: "600",
-        fontSize: "0.95rem",
-        transition: "background 0.3s ease",
-    },
-    tableContainer: {
-        overflowX: "auto",
-    },
-    table: {
-        width: "100%",
-        borderCollapse: "collapse",
-        fontSize: "0.95rem",
-    },
-    thead: {
-        background: "#f1f5f9",
-        color: "#1e293b",
-        textTransform: "uppercase",
-    },
-    th: {
-        padding: "0.75rem",
-        textAlign: "left",
-        borderBottom: "2px solid #cbd5e1",
-        fontWeight: "600",
-        fontSize: "0.9rem",
-    },
-    tr: {
-        borderBottom: "1px solid #e5e7eb",
-        transition: "background 0.2s",
-    },
-    td: {
-        padding: "0.75rem",
-        color: "#334155",
-        fontSize: "0.9rem",
-        verticalAlign: "top",
-    },
-    link: {
-        color: "#2563eb",
-        textDecoration: "underline",
-        fontWeight: "500",
-    },
-    loadingCell: {
-        textAlign: "center",
-        color: "#555",
-        padding: "1rem",
-    },
-    noDataCell: {
-        textAlign: "center",
-        color: "#777",
-        padding: "1rem",
-    },
-    btnCopy: {
-        background: "#22c55e",
-        color: "#fff",
-        padding: "0.4rem 0.8rem",
-        border: "none",
-        borderRadius: "6px",
-        cursor: "pointer",
-        marginRight: "0.4rem",
-    },
-    btnDownload: {
-        background: "#0ea5e9",
-        color: "#fff",
-        padding: "0.4rem 0.8rem",
-        border: "none",
-        borderRadius: "6px",
-        cursor: "pointer",
-        marginRight: "0.4rem",
-    },
-    btnDelete: {
-        background: "#ef4444",
-        color: "#fff",
-        padding: "0.4rem 0.8rem",
-        border: "none",
-        borderRadius: "6px",
-        cursor: "pointer",
-    },
-};

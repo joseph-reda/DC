@@ -5,7 +5,7 @@ import { saveRequest, listenRequests } from "../firebaseService";
 export default function EngineerPage() {
     const [nextIR, setNextIR] = useState("BADYA-CON-A1-IR-ARCH-001");
 
-    // 🟢 توليد رقم IR تلقائي بناءً على آخر رقم محفوظ
+    // 🟢 توليد رقم IR تلقائي
     useEffect(() => {
         const unsubscribe = listenRequests((data) => {
             if (!data || data.length === 0) {
@@ -13,7 +13,6 @@ export default function EngineerPage() {
                 return;
             }
 
-            // 🔹 استخراج آخر رقم IR وحساب الرقم التالي
             const last = data
                 .map((r) => r.irNo)
                 .filter(Boolean)
@@ -38,7 +37,7 @@ export default function EngineerPage() {
 
             const finalData = {
                 ...formData,
-                irNo: nextIR, // رقم تلقائي
+                irNo: nextIR,
                 irLatestRev: "L",
                 hypwr: "HYPWRLINK",
                 desc: formData.desc?.trim() || "No Description",
@@ -54,10 +53,12 @@ export default function EngineerPage() {
     }
 
     return (
-        <div style={styles.container}>
-            <h2 style={styles.title}>👷 Engineer – Submit Inspection Request</h2>
+        <div className="flex flex-col items-center min-h-screen bg-gray-50 py-12 px-4 font-sans">
+            <h2 className="text-2xl font-bold text-blue-600 mb-6 text-center">
+                👷 Engineer – Submit Inspection Request
+            </h2>
 
-            <div style={styles.card}>
+            <div className="bg-white w-full max-w-2xl rounded-xl shadow-md p-6">
                 <RequestForm
                     onSaved={handleSave}
                     hiddenIR={true}
@@ -69,31 +70,3 @@ export default function EngineerPage() {
         </div>
     );
 }
-
-// 🎨 تنسيقات احترافية ومتناغمة
-const styles = {
-    container: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "3rem 1rem",
-        backgroundColor: "#f8fafc",
-        minHeight: "100vh",
-        fontFamily: "Inter, sans-serif",
-    },
-    title: {
-        color: "#2563eb",
-        fontSize: "1.6rem",
-        fontWeight: "700",
-        marginBottom: "1.5rem",
-        textAlign: "center",
-    },
-    card: {
-        backgroundColor: "#ffffff",
-        borderRadius: "12px",
-        boxShadow: "0 4px 14px rgba(0, 0, 0, 0.08)",
-        padding: "2rem 1.5rem",
-        width: "100%",
-        maxWidth: "700px",
-    },
-};

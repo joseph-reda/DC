@@ -1,64 +1,75 @@
 import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import "../main.css"
+
 export default function Navbar() {
     const loc = useLocation();
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    const links = [
+        { name: "Engineer", path: "/" },
+        { name: "DC", path: "/dc" },
+    ];
 
     return (
-        <nav
-            className="navbar"
-            style={{
-                background: "#1e293b",
-                color: "#fff",
-                padding: "0.75rem 1.5rem",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-            }}
-        >
-            <span
-                className="nav-logo"
-                style={{
-                    fontSize: "1.2rem",
-                    fontWeight: "bold",
-                    letterSpacing: "0.5px",
-                }}
-            >
-                🏗️ DC System
-            </span>
+        <nav className="bg-gray-800 text-white sticky top-0 z-50 shadow-md">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between h-16 items-center">
+                    {/* Logo */}
+                    <div className="flex-shrink-0 text-xl font-bold tracking-wide">
+                        🏗️ DC System
+                    </div>
 
-            <div className="nav-links" style={{ display: "flex", gap: "1rem" }}>
-                <Link
-                    to="/"
-                    className={loc.pathname === "/" ? "active" : ""}
-                    style={{
-                        color: loc.pathname === "/" ? "#38bdf8" : "#fff",
-                        textDecoration: "none",
-                        fontWeight: loc.pathname === "/" ? "bold" : "normal",
-                        borderBottom:
-                            loc.pathname === "/" ? "2px solid #38bdf8" : "2px solid transparent",
-                        paddingBottom: "2px",
-                        transition: "0.3s",
-                    }}
-                >
-                    Engineer
-                </Link>
+                    {/* Desktop Links */}
+                    <div className="hidden md:flex space-x-6">
+                        {links.map((link) => (
+                            <Link
+                                key={link.path}
+                                to={link.path}
+                                className={`relative py-2 px-1 transition-colors duration-300 ${loc.pathname === link.path
+                                        ? "text-sky-400 font-semibold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-sky-400"
+                                        : "text-white hover:text-sky-400"
+                                    }`}
+                            >
+                                {link.name}
+                            </Link>
+                        ))}
+                    </div>
 
-                <Link
-                    to="/dc"
-                    className={loc.pathname === "/dc" ? "active" : ""}
-                    style={{
-                        color: loc.pathname === "/dc" ? "#38bdf8" : "#fff",
-                        textDecoration: "none",
-                        fontWeight: loc.pathname === "/dc" ? "bold" : "normal",
-                        borderBottom:
-                            loc.pathname === "/dc" ? "2px solid #38bdf8" : "2px solid transparent",
-                        paddingBottom: "2px",
-                        transition: "0.3s",
-                    }}
-                >
-                    DC
-                </Link>
+                    {/* Mobile Menu Button */}
+                    <div className="md:hidden flex items-center">
+                        <button
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            className="focus:outline-none p-2 rounded-md hover:bg-gray-700 transition"
+                        >
+                            {menuOpen ? (
+                                <span className="text-2xl">&#x2715;</span> // ✖
+                            ) : (
+                                <span className="text-2xl">&#9776;</span> // ☰
+                            )}
+                        </button>
+                    </div>
+                </div>
             </div>
+
+            {/* Mobile Menu */}
+            {menuOpen && (
+                <div className="md:hidden bg-gray-800 border-t border-gray-700">
+                    {links.map((link) => (
+                        <Link
+                            key={link.path}
+                            to={link.path}
+                            onClick={() => setMenuOpen(false)}
+                            className={`block px-4 py-3 transition-colors duration-300 ${loc.pathname === link.path
+                                    ? "text-sky-400 font-semibold"
+                                    : "text-white hover:text-sky-400"
+                                }`}
+                        >
+                            {link.name}
+                        </Link>
+                    ))}
+                </div>
+            )}
         </nav>
     );
 }
