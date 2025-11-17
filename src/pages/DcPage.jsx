@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
-import RequestForm from "../components/RequestForm";
 import {
-    saveRequest,
     listenRequests,
     deleteRequest,
     copyRow,
@@ -12,6 +10,7 @@ export default function DcPage() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // 🟢 الاستماع المباشر للطلبات من Firebase
     useEffect(() => {
         const unsubscribe = listenRequests((data) => {
             setRequests(data);
@@ -20,16 +19,7 @@ export default function DcPage() {
         return () => unsubscribe && unsubscribe();
     }, []);
 
-    async function handleSave(formData) {
-        try {
-            await saveRequest(formData);
-            alert(`✅ Request saved successfully with IR No: ${formData.irNo}`);
-        } catch (err) {
-            console.error("❌ Error saving request:", err);
-            alert("❌ Failed to save request: " + (err.message || err));
-        }
-    }
-
+    // 🗑️ حذف طلب
     async function handleDelete(id) {
         if (!window.confirm("Are you sure you want to delete this request?")) return;
         try {
@@ -40,26 +30,29 @@ export default function DcPage() {
         }
     }
 
+    // 📋 نسخ صف
     async function handleCopyRow(row) {
         try {
             await copyRow(row);
             alert("✅ Row copied to clipboard!");
         } catch (err) {
-            alert("❌ Failed to copy row: " + err.message);
+            alert("❌ Failed to copy row: " + (err.message || err));
         }
     }
 
+    // 📋 نسخ جميع الصفوف
     async function handleCopyAll() {
         try {
             if (requests.length === 0) return alert("⚠️ No data to copy");
             await copyAllRows(requests);
             alert("✅ All rows copied successfully!");
         } catch (err) {
-            alert("❌ Failed to copy all rows: " + err.message);
+            alert("❌ Failed to copy all rows: " + (err.message || err));
         }
     }
 
-    async function generateWordFile(request) {
+    // 💾 تنزيل Word (تحتاج أن يكون Flask Server شغال)
+    async function handleDownloadWord(request) {
         try {
             const response = await fetch("http://127.0.0.1:5000/generate-word", {
                 method: "POST",
@@ -91,7 +84,7 @@ export default function DcPage() {
     return (
         <div className="min-h-screen bg-gray-50 p-6 font-sans">
             <h2 className="text-2xl font-bold text-blue-700 text-center mb-6">
-                📁 Document Controller – Inspection Requests
+                📁 Document Controller – All Inspection Requests
             </h2>
 
             {/* 🔹 Copy All */}
@@ -111,9 +104,12 @@ export default function DcPage() {
                 <p className="text-center text-gray-500 italic">No requests found.</p>
             ) : (
                 <div className="overflow-x-auto bg-white rounded-xl shadow-md p-3">
-                    <table className="w-full border-collapse min-w-[750px]">
+                    <table className="w-full border-collapse min-w-[900px]">
                         <thead>
                             <tr className="bg-gray-100 border-b-2 border-gray-300 text-gray-700 uppercase text-sm">
+                                <th className="text-left px-4 py-2">IR No</th>
+                                <th className="text-left px-4 py-2">Department</th>
+                                <th className="text-left px-4 py-2">Project</th>
                                 <th className="text-left px-4 py-2">Description</th>
                                 <th className="text-left px-4 py-2">Location</th>
                                 <th className="text-left px-4 py-2">Received Date</th>
@@ -127,9 +123,12 @@ export default function DcPage() {
                                     className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
                                         }`}
                                 >
-                                    <td className="px-4 py-2 text-gray-700">{r.desc}</td>
-                                    <td className="px-4 py-2 text-gray-700">{r.location}</td>
-                                    <td className="px-4 py-2 text-gray-700">{r.receivedDate}</td>
+                                    <td className="px-4 py-2">{r.irNo}</td>
+                                    <td className="px-4 py-2">{r.department}</td>
+                                    <td className="px-4 py-2">{r.project}</td>
+                                    <td className="px-4 py-2">{r.desc}</td>
+                                    <td className="px-4 py-2">{r.location}</td>
+                                    <td className="px-4 py-2">{r.receivedDate}</td>
                                     <td className="px-4 py-2 text-center space-x-2">
                                         <button
                                             onClick={() => handleCopyRow(r)}
@@ -138,7 +137,7 @@ export default function DcPage() {
                                             📋 Copy
                                         </button>
                                         <button
-                                            onClick={() => generateWordFile(r)}
+                                            onClick={() => handleDownloadWord(r)}
                                             className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1 rounded-md text-sm"
                                         >
                                             💾 Download

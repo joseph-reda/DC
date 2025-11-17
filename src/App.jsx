@@ -3,17 +3,42 @@ import Navbar from "./components/Navbar";
 import EngineerPage from "./pages/EngineerPage";
 import DcPage from "./pages/DcPage";
 import LoginPage from "./pages/LoginPage";
-import "./main.css";
+
 export default function App() {
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+
   return (
     <div>
-      <Navbar />
+      {/* Navbar يظهر فقط إذا هناك مستخدم */}
+      {user && <Navbar />}
+
       <main className="container">
         <Routes>
-          <Route path="/" element={<EngineerPage />} />
+          {/* Login */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/dc" element={<DcPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+
+          {/* Engineer */}
+          <Route
+            path="/"
+            element={
+              user?.role === "engineer" ? (
+                <EngineerPage />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          {/* DC */}
+          <Route
+            path="/dc"
+            element={
+              user?.role === "dc" ? <DcPage /> : <Navigate to="/login" replace />
+            }
+          />
+
+          {/* أي رابط آخر */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>
     </div>
