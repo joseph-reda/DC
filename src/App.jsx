@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import EngineerPage from "./pages/EngineerPage";
@@ -5,17 +6,29 @@ import DcPage from "./pages/DcPage";
 import LoginPage from "./pages/LoginPage";
 
 export default function App() {
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  // ✅ state لتخزين المستخدم الحالي
+  const [user, setUser] = useState(() => {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  });
+
+  // تحديث الـ state إذا تغير localStorage (اختياري)
+  useEffect(() => {
+    const handleStorage = () => {
+      setUser(JSON.parse(localStorage.getItem("user") || "null"));
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   return (
-    <div>
-      {/* Navbar يظهر فقط إذا هناك مستخدم */}
+    <>
+      {/* Navbar يظهر فقط عند وجود مستخدم */}
       {user && <Navbar />}
 
-      <main className="container">
+      <main className="container mx-auto p-4">
         <Routes>
           {/* Login */}
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage setUser={setUser} />} />
 
           {/* Engineer */}
           <Route
@@ -37,10 +50,10 @@ export default function App() {
             }
           />
 
-          {/* أي رابط آخر */}
+          {/* أي رابط غير معروف */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>
-    </div>
+    </>
   );
 }
