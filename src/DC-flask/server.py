@@ -5,7 +5,8 @@ from flask_cors import CORS
 import os
 
 app = Flask(__name__)
-CORS(app)
+# السماح لطلبات React من Vercel أو أي دومين آخر
+CORS(app, origins=["https://dc-s4v9.vercel.app", "http://localhost:3000"])
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_PATH = os.path.join(BASE_DIR, "template-clean-safe.docx")
@@ -18,7 +19,6 @@ def home():
 def generate_word():
     try:
         data = request.get_json(force=True)
-
         context = {
             "Date": data.get("Date", "N/A"),
             "SubmittalNo": data.get("SubmittalNo", "N/A"),
@@ -45,5 +45,6 @@ def generate_word():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# تشغيل محلي (اختياري)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
