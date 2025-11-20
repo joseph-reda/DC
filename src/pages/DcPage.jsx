@@ -40,7 +40,7 @@ export default function DcPage() {
         }
     }
 
-    // 📋 نسخ جميع الصفوف
+    // 📋 نسخ كل الصفوف
     async function handleCopyAll() {
         try {
             if (requests.length === 0) return alert("⚠️ No data to copy");
@@ -51,10 +51,10 @@ export default function DcPage() {
         }
     }
 
-    // 💾 تنزيل Word (تحتاج أن يكون Flask Server شغال)
+    // 💾 تنزيل Word من PythonAnywhere — يعمل دائماً من أي جهاز
     async function handleDownloadWord(request) {
         try {
-            const response = await fetch("http://127.0.0.1:5000/generate-word", {
+            const response = await fetch("https://nehrugamal09.pythonanywhere.com/generate-word", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -68,13 +68,16 @@ export default function DcPage() {
 
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
+
             const a = document.createElement("a");
             a.href = url;
             a.download = `IR-${request.irNo || "Request"}.docx`;
             document.body.appendChild(a);
             a.click();
             a.remove();
+
             window.URL.revokeObjectURL(url);
+
         } catch (err) {
             console.error("❌ Word generation error:", err);
             alert("❌ Failed to generate Word file. Please check Flask server.");
@@ -116,6 +119,7 @@ export default function DcPage() {
                                 <th className="text-center px-4 py-2">Actions</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             {requests.map((r, idx) => (
                                 <tr
@@ -129,6 +133,7 @@ export default function DcPage() {
                                     <td className="px-4 py-2">{r.desc}</td>
                                     <td className="px-4 py-2">{r.location}</td>
                                     <td className="px-4 py-2">{r.receivedDate}</td>
+
                                     <td className="px-4 py-2 text-center space-x-2">
                                         <button
                                             onClick={() => handleCopyRow(r)}
@@ -136,12 +141,14 @@ export default function DcPage() {
                                         >
                                             📋 Copy
                                         </button>
+
                                         <button
                                             onClick={() => handleDownloadWord(r)}
                                             className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1 rounded-md text-sm"
                                         >
                                             💾 Download
                                         </button>
+
                                         <button
                                             onClick={() => handleDelete(r.id)}
                                             className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
@@ -152,6 +159,7 @@ export default function DcPage() {
                                 </tr>
                             ))}
                         </tbody>
+
                     </table>
                 </div>
             )}
