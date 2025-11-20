@@ -13,6 +13,9 @@ export default function Navbar() {
     const links = [];
     if (user.role === "engineer") links.push({ name: "Engineer", path: "/" });
     if (user.role === "dc") links.push({ name: "DC", path: "/dc" });
+    if (user.role === "dc")
+        links.push({ name: "Admin", path: "/admin/projects" });
+
 
     // ⛔ زر تسجيل خروج
     const handleLogout = () => {
@@ -28,17 +31,17 @@ export default function Navbar() {
                         🏗️ DC System
                     </Link>
 
+
                     <div className="hidden md:flex space-x-6 items-center">
 
                         {links.map((link) => (
                             <Link
                                 key={link.path}
                                 to={link.path}
-                                className={`relative py-2 px-1 transition-colors duration-300 ${
-                                    loc.pathname === link.path
+                                className={`relative py-2 px-1 transition-colors duration-300 ${loc.pathname === link.path
                                         ? "text-sky-400 font-semibold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-sky-400"
                                         : "text-white hover:text-sky-400"
-                                }`}
+                                    }`}
                             >
                                 {link.name}
                             </Link>
@@ -77,11 +80,10 @@ export default function Navbar() {
                             key={link.path}
                             to={link.path}
                             onClick={() => setMenuOpen(false)}
-                            className={`block px-4 py-3 transition-colors duration-300 ${
-                                loc.pathname === link.path
+                            className={`block px-4 py-3 transition-colors duration-300 ${loc.pathname === link.path
                                     ? "text-sky-400 font-semibold"
                                     : "text-white hover:text-sky-400"
-                            }`}
+                                }`}
                         >
                             {link.name}
                         </Link>

@@ -1,47 +1,78 @@
 import React, { useState, useEffect } from "react";
 import RequestForm from "../components/RequestForm";
-import { saveRequest, listenRequests } from "../firebaseService";
+import { saveRequest } from "../firebaseService";
+
+const API = "https://nehrugamal09.pythonanywhere.com";
 
 export default function EngineerPage() {
-    const [nextIR, setNextIR] = useState("BADYA-CON-A1-IR-ARCH-001");
-    const [selectedProject, setSelectedProject] = useState(""); // مشروع مختار
+    const [projects, setProjects] = useState([]);
+    const [selectedProject, setSelectedProject] = useState("");
+    const [nextIR, setNextIR] = useState("");
+    const [locations, setLocations] = useState([]);
+    const [typesMap, setTypesMap] = useState({});
+    const [generalDescriptions, setGeneralDescriptions] = useState([]);
 
-    const PROJECTS = [
-        "A6",
-        "A6.FF",
-        "A7",
-        "A7-F.F",
-        "A1",
-        "A2",
-        // أضف باقي المشاريع هنا
-    ];
-
-    // توليد رقم IR تلقائي
+    // load projects and general descriptions on mount
     useEffect(() => {
-        const unsubscribe = listenRequests((data) => {
-            if (!data || data.length === 0) {
-                setNextIR("BADYA-CON-A1-IR-ARCH-001");
+        async function load() {
+            try {
+                const [projRes, descRes] = await Promise.all([
+                    fetch(`${API}/projects`),
+                    fetch(`${API}/general-descriptions`)
+                ]);
+                const projJson = await projRes.json();
+                const descJson = await descRes.json();
+                setProjects(Object.keys(projJson.projects || {}));
+                setGeneralDescriptions(descJson.descriptions || []);
+            } catch (err) {
+                console.error("Error loading initial data:", err);
+            }
+        }
+        load();
+    }, []);
+
+    // when project selected -> get nextIR and locations+types
+    useEffect(() => {
+        async function loadForProject() {
+            if (!selectedProject) {
+                setNextIR("");
+                setLocations([]);
+                setTypesMap({});
                 return;
             }
 
-            const last = data
-                .map((r) => r.irNo)
-                .filter(Boolean)
-                .sort((a, b) => {
-                    const numA = parseInt(a.match(/\d+$/)?.[0] || 0);
-                    const numB = parseInt(b.match(/\d+$/)?.[0] || 0);
-                    return numB - numA;
-                })[0];
+            try {
+                const [irRes, locRes] = await Promise.all([
+                    fetch(`${API}/get-next-ir?project=${selectedProject}`),
+                    fetch(`${API}/location-rules?project=${selectedProject}`)
+                ]);
 
-            const lastNum = parseInt(last.match(/\d+$/)?.[0] || 0);
-            const nextNum = (lastNum + 1).toString().padStart(3, "0");
-            setNextIR(`BADYA-CON-A1-IR-ARCH-${nextNum}`);
-        });
+                if (irRes.ok) {
+                    const irJson = await irRes.json();
+                    const padded = String(irJson.nextIR).padStart(3, "0");
+                    setNextIR(`BADYA-CON-${selectedProject}-IR-ARCH-${padded}`);
+                } else {
+                    setNextIR(`BADYA-CON-${selectedProject}-IR-ARCH-001`);
+                }
 
-        return () => unsubscribe && unsubscribe();
-    }, []);
+                if (locRes.ok) {
+                    const locJson = await locRes.json();
+                    setLocations(locJson.locations || []);
+                    setTypesMap(locJson.types || {});
+                } else {
+                    setLocations([]);
+                    setTypesMap({});
+                }
+            } catch (err) {
+                console.error("Error loading project details:", err);
+                setLocations([]);
+                setTypesMap({});
+            }
+        }
 
-    // حفظ الطلب الجديد
+        loadForProject();
+    }, [selectedProject]);
+
     async function handleSave(formData) {
         try {
             if (!selectedProject) return alert("⚠️ Please select a project");
@@ -52,39 +83,49 @@ export default function EngineerPage() {
             const finalData = {
                 ...formData,
                 irNo: nextIR,
-                irLatestRev: "L",
-                hypwr: "HYPWRLINK",
-                desc: formData.desc?.trim() || "No Description",
+                project: selectedProject,
+                department: user.department,
                 receivedDate: formData.receivedDate || today,
-                project: selectedProject, // إضافة المشروع
-                department: user.department, // إضافة القسم
+                desc: formData.finalDescription || formData.desc || "No Description",
             };
 
             await saveRequest(finalData);
-            alert(`✅ Request submitted successfully with No: ${nextIR}`);
+
+            const lastNum = parseInt(nextIR.match(/\d+$/)[0]);
+
+            await fetch(`${API}/save-last-ir`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    project: selectedProject,
+                    lastIR: lastNum
+                })
+            });
+
+            alert(`✔ Saved with IR: ${nextIR}`);
+
         } catch (err) {
-            console.error("❌ Error saving request:", err);
-            alert("❌ Failed to submit request: " + (err.message || err));
+            console.error("Error:", err);
+            alert("❌ Failed to save request.");
         }
     }
 
     return (
         <div className="flex flex-col items-center min-h-screen bg-gray-50 py-12 px-4 font-sans">
-            <h2 className="text-2xl font-bold text-blue-600 mb-6 text-center">
-                👷 Engineer – Submit Inspection Request
-            </h2>
+            <h2 className="text-2xl font-bold text-blue-600 mb-6">Engineer – Submit Inspection Request</h2>
 
             <div className="bg-white w-full max-w-2xl rounded-xl shadow-md p-6">
+
                 {/* اختيار المشروع */}
                 <div className="mb-4">
                     <label className="block mb-1 font-medium text-gray-700">Select Project:</label>
                     <select
                         value={selectedProject}
                         onChange={(e) => setSelectedProject(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-2 border border-gray-300 rounded-md"
                     >
                         <option value="">-- Select Project --</option>
-                        {PROJECTS.map((proj) => (
+                        {projects.map((proj) => (
                             <option key={proj} value={proj}>{proj}</option>
                         ))}
                     </select>
@@ -92,10 +133,11 @@ export default function EngineerPage() {
 
                 <RequestForm
                     onSaved={handleSave}
-                    hiddenIR={true}
                     fixedIR={nextIR}
-                    hideLatestRev={true}
-                    hideHypwr={true}
+                    hiddenIR={true}
+                    locations={locations}
+                    typesMap={typesMap}
+                    generalDescriptions={generalDescriptions}
                 />
             </div>
         </div>
