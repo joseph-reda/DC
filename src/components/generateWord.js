@@ -1,29 +1,33 @@
-export async function generateWordFile(request) {
-    try {
-        const response = await fetch(
-            "https://nehrugamal09.pythonanywhere.com/generate-word",
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    Date: request.receivedDate || "",
-                    SubmittalNo: request.irNo || "",
-                    Subject: request.desc || "",
-                }),
-            }
-        );
+// -------------------------
+//    GENERATE WORD FILE
+// -------------------------
+export async function downloadWord(ir) {
+    const API = "https://nehrugamal09.pythonanywhere.com";
 
-        if (!response.ok) throw new Error("Server error");
+const payload = {
+    receivedDate: ir.receivedDate || "",
+    irNo: ir.irNo || "",
+    desc: ir.desc || ""
+};
 
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${request.irNo}.docx`;
-        a.click();
-        a.remove();
-    } catch (err) {
-        console.error(err);
-        alert("❌ Failed to generate Word file");
+
+    const res = await fetch(`${API}/generate-word`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+        throw new Error("Failed to generate file");
     }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${ir.irNo}.docx`;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
 }

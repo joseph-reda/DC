@@ -6,12 +6,15 @@ import UsersAdminPage from "./UsersAdminPage";
 
 export default function AdminDashboard() {
     const [page, setPage] = useState("engineer");
+    function handleLogout() {
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+    }
 
     return (
         <div className="flex h-screen">
-
-            {/* Sidebar */}
             <div className="w-56 bg-gray-900 text-white p-4 space-y-4">
+
                 <button className="w-full text-left" onClick={() => setPage("engineer")}>
                     Engineer Page
                 </button>
@@ -27,7 +30,16 @@ export default function AdminDashboard() {
                 <button className="w-full text-left" onClick={() => setPage("users")}>
                     Users Admin
                 </button>
+
+                {/* LOGOUT BUTTON */}
+                <button
+                    onClick={handleLogout}
+                    className="w-full text-left text-red-400 font-bold mt-8"
+                >
+                    Logout
+                </button>
             </div>
+
 
             {/* Main Content */}
             <div className="flex-1 p-6 overflow-auto">

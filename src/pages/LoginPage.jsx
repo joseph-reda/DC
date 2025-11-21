@@ -3,63 +3,92 @@ import { useNavigate } from "react-router-dom";
 
 const API = "https://nehrugamal09.pythonanywhere.com";
 
-export default function LoginPage() {
+export default function LoginPage({ setUser }) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     async function handleLogin(e) {
         e.preventDefault();
+        setLoading(true);
 
-        const res = await fetch(`${API}/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
-        });
+        try {
+            const res = await fetch(`${API}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
 
-        const json = await res.json();
+            const json = await res.json();
 
-        if (!res.ok) {
-            alert(json.error || "Login failed");
-            return;
+            if (!res.ok) {
+                alert(json.error || "Invalid username or password");
+                setLoading(false);
+                return;
+            }
+
+            // Save the user (without password)
+            localStorage.setItem("user", JSON.stringify(json.user));
+            setUser(json.user);
+
+            // Redirect by role
+            if (json.user.role === "admin") {
+                navigate("/admin");
+            } else if (json.user.role === "dc") {
+                navigate("/dc");
+            } else {
+                navigate("/engineer");
+            }
+
+        } catch (err) {
+            alert("Network error, please try again.");
+            console.error(err);
         }
 
-        localStorage.setItem("user", JSON.stringify(json));
-
-        if (json.role === "admin") {
-            navigate("/admin");
-        } else if (json.role === "dc") {
-            navigate("/dc");
-        } else {
-            navigate("/engineer");
-        }
+        setLoading(false);
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-200">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
             <form
                 onSubmit={handleLogin}
-                className="bg-white p-8 rounded shadow-md w-96"
+                className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md"
             >
-                <h2 className="text-2xl font-bold mb-6">Login</h2>
-
-                <input
-                    className="border p-2 w-full mb-4 rounded"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
-
-                <input
-                    className="border p-2 w-full mb-6 rounded"
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-
-                <button className="w-full bg-blue-600 text-white p-2 rounded">
+                <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
                     Login
+                </h2>
+
+                <div className="mb-4">
+                    <label className="block mb-1 text-gray-600">Username</label>
+                    <input
+                        type="text"
+                        className="border w-full p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        autoComplete="off"
+                    />
+                </div>
+
+                <div className="mb-6">
+                    <label className="block mb-1 text-gray-600">Password</label>
+                    <input
+                        type="password"
+                        className="border w-full p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        autoComplete="off"
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+                >
+                    {loading ? "Logging in..." : "Login"}
                 </button>
             </form>
         </div>

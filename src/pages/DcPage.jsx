@@ -1,167 +1,205 @@
-import React, { useEffect, useState } from "react";
-import {
-    listenRequests,
-    deleteRequest,
-    copyRow,
-    copyAllRows,
-} from "../firebaseService";
+import { useEffect, useState } from "react";
+import { copyRow, copyAllRows } from "../firebaseService";
 
 export default function DcPage() {
-    const [requests, setRequests] = useState([]);
+    const API = "https://nehrugamal09.pythonanywhere.com";
+
+    const [irs, setIRs] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // 🟢 الاستماع المباشر للطلبات من Firebase
+    const [toast, setToast] = useState(""); 
+
+    function showToast(msg) {
+        setToast(msg);
+        setTimeout(() => setToast(""), 1500);
+    }
+
+    // Load all IRs
     useEffect(() => {
-        const unsubscribe = listenRequests((data) => {
-            setRequests(data);
-            setLoading(false);
-        });
-        return () => unsubscribe && unsubscribe();
+        fetch(`${API}/irs`)
+            .then(res => res.json())
+            .then(data => {
+                setIRs(data.irs || []);
+                setLoading(false);
+            })
+            .catch(() => setLoading(false));
     }, []);
 
-    // 🗑️ حذف طلب
-    async function handleDelete(id) {
-        if (!window.confirm("Are you sure you want to delete this request?")) return;
-        try {
-            await deleteRequest(id);
-            alert("🗑️ Request deleted successfully!");
-        } catch (err) {
-            alert("❌ Failed to delete: " + err.message);
-        }
+    function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "/login";
     }
 
-    // 📋 نسخ صف
-    async function handleCopyRow(row) {
-        try {
-            await copyRow(row);
-            alert("✅ Row copied to clipboard!");
-        } catch (err) {
-            alert("❌ Failed to copy row: " + (err.message || err));
-        }
+    // Group by project -> department
+    const grouped = {};
+    for (const ir of irs) {
+        if (!grouped[ir.project]) grouped[ir.project] = {};
+        if (!grouped[ir.project][ir.department]) grouped[ir.project][ir.department] = [];
+        grouped[ir.project][ir.department].push(ir);
     }
 
-    // 📋 نسخ كل الصفوف
-    async function handleCopyAll() {
-        try {
-            if (requests.length === 0) return alert("⚠️ No data to copy");
-            await copyAllRows(requests);
-            alert("✅ All rows copied successfully!");
-        } catch (err) {
-            alert("❌ Failed to copy all rows: " + (err.message || err));
-        }
+    async function handleCopy(ir) {
+        await copyRow(ir);
+        showToast("✔ Copied!");
     }
 
-    // 💾 تنزيل Word من PythonAnywhere — يعمل دائماً من أي جهاز
-    async function handleDownloadWord(request) {
+    async function handleCopyAll(list) {
+        await copyAllRows(list);
+        showToast("✔ All Rows Copied!");
+    }
+
+    // ***************************************
+    // FIXED WORD DOWNLOAD FUNCTION
+    // ***************************************
+    async function handleDownloadWord(ir) {
         try {
-            const response = await fetch("https://nehrugamal09.pythonanywhere.com/generate-word", {
+            const res = await fetch(`${API}/generate-word`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    Date: request.receivedDate || "",
-                    SubmittalNo: request.irNo || "",
-                    Subject: request.desc || "",
-                }),
+                    irNo: ir.irNo,
+                    desc: ir.desc,
+                    receivedDate: ir.receivedDate
+                })
             });
 
-            if (!response.ok) throw new Error("Server error while generating file");
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
 
             const a = document.createElement("a");
             a.href = url;
-            a.download = `IR-${request.irNo || "Request"}.docx`;
-            document.body.appendChild(a);
+            a.download = `${ir.irNo}.docx`;
             a.click();
             a.remove();
 
-            window.URL.revokeObjectURL(url);
+            showToast("✔ Word File Downloaded!");
+
+        } catch (e) {
+            alert("Download failed");
+        }
+    }
+
+    async function handleDelete(ir) {
+        if (!window.confirm(`Are you sure you want to delete ${ir.irNo}?`))
+            return;
+
+        try {
+            const res = await fetch(`${API}/irs?irNo=${encodeURIComponent(ir.irNo)}`, {
+                method: "DELETE"
+            });
+
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || "Delete failed");
+
+            setIRs(prev => prev.filter(x => x.irNo !== ir.irNo));
+
+            showToast("✔ IR Deleted!");
 
         } catch (err) {
-            console.error("❌ Word generation error:", err);
-            alert("❌ Failed to generate Word file. Please check Flask server.");
+            alert("❌ Delete failed: " + err.message);
         }
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6 font-sans">
-            <h2 className="text-2xl font-bold text-blue-700 text-center mb-6">
-                📁 Document Controller – All Inspection Requests
-            </h2>
+        <div className="p-6 bg-gray-100 min-h-screen">
 
-            {/* 🔹 Copy All */}
-            <div className="flex justify-end mb-4">
-                <button
-                    onClick={handleCopyAll}
-                    className="bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-800 transition"
-                >
-                    📋 Copy All
+            {toast && (
+                <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
+                    {toast}
+                </div>
+            )}
+
+            <div className="flex justify-between mb-6">
+                <h1 className="text-2xl font-bold text-blue-700">
+                    Document Controller — IR Records
+                </h1>
+                <button onClick={logout} className="px-3 py-1 bg-red-600 text-white rounded">
+                    Logout
                 </button>
             </div>
 
-            {/* 🔸 Table */}
             {loading ? (
-                <p className="text-center text-gray-500 italic">⏳ Loading requests...</p>
-            ) : requests.length === 0 ? (
-                <p className="text-center text-gray-500 italic">No requests found.</p>
+                <p>Loading...</p>
+            ) : Object.keys(grouped).length === 0 ? (
+                <p>No IRs found</p>
             ) : (
-                <div className="overflow-x-auto bg-white rounded-xl shadow-md p-3">
-                    <table className="w-full border-collapse min-w-[900px]">
-                        <thead>
-                            <tr className="bg-gray-100 border-b-2 border-gray-300 text-gray-700 uppercase text-sm">
-                                <th className="text-left px-4 py-2">IR No</th>
-                                <th className="text-left px-4 py-2">Department</th>
-                                <th className="text-left px-4 py-2">Project</th>
-                                <th className="text-left px-4 py-2">Description</th>
-                                <th className="text-left px-4 py-2">Location</th>
-                                <th className="text-left px-4 py-2">Received Date</th>
-                                <th className="text-center px-4 py-2">Actions</th>
-                            </tr>
-                        </thead>
+                Object.keys(grouped).map(project => (
+                    <div key={project} className="mb-10 bg-white p-5 rounded-xl shadow-md">
 
-                        <tbody>
-                            {requests.map((r, idx) => (
-                                <tr
-                                    key={r.id || idx}
-                                    className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-                                        }`}
-                                >
-                                    <td className="px-4 py-2">{r.irNo}</td>
-                                    <td className="px-4 py-2">{r.department}</td>
-                                    <td className="px-4 py-2">{r.project}</td>
-                                    <td className="px-4 py-2">{r.desc}</td>
-                                    <td className="px-4 py-2">{r.location}</td>
-                                    <td className="px-4 py-2">{r.receivedDate}</td>
+                        <h2 className="text-xl font-bold text-green-700 mb-3">
+                            📌 Project: {project}
+                        </h2>
 
-                                    <td className="px-4 py-2 text-center space-x-2">
-                                        <button
-                                            onClick={() => handleCopyRow(r)}
-                                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm"
-                                        >
-                                            📋 Copy
-                                        </button>
+                        {Object.keys(grouped[project]).map(dept => {
+                            const list = grouped[project][dept];
 
-                                        <button
-                                            onClick={() => handleDownloadWord(r)}
-                                            className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1 rounded-md text-sm"
-                                        >
-                                            💾 Download
-                                        </button>
+                            return (
+                                <div key={dept} className="mb-6 border-l-4 border-blue-600 pl-4">
 
-                                        <button
-                                            onClick={() => handleDelete(r.id)}
-                                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
-                                        >
-                                            🗑️ Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
+                                    <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                                        🏗️ Department: {dept}
+                                    </h3>
 
-                    </table>
-                </div>
+                                    <button
+                                        onClick={() => handleCopyAll(list)}
+                                        className="bg-blue-700 text-white px-4 py-2 rounded-lg mb-2"
+                                    >
+                                        📋 Copy All ({list.length})
+                                    </button>
+
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full bg-white border rounded">
+                                            <thead className="bg-gray-200">
+                                                <tr>
+                                                    <th className="p-2">IR No</th>
+                                                    <th className="p-2">Description</th>
+                                                    <th className="p-2">Location</th>
+                                                    <th className="p-2">Date</th>
+                                                    <th className="p-2 text-center">Actions</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {list.map((ir, i) => (
+                                                    <tr key={i} className="border-b">
+                                                        <td className="p-2">{ir.irNo}</td>
+                                                        <td className="p-2">{ir.desc}</td>
+                                                        <td className="p-2">{ir.location}</td>
+                                                        <td className="p-2">{ir.receivedDate}</td>
+
+                                                        <td className="p-2 text-center space-x-2">
+                                                            <button
+                                                                onClick={() => handleCopy(ir)}
+                                                                className="bg-green-600 text-white px-3 py-1 rounded"
+                                                            >
+                                                                📋 Copy
+                                                            </button>
+
+                                                            <button
+                                                                onClick={() => handleDownloadWord(ir)}
+                                                                className="bg-indigo-600 text-white px-3 py-1 rounded"
+                                                            >
+                                                                💾 Word
+                                                            </button>
+
+                                                            <button
+                                                                onClick={() => handleDelete(ir)}
+                                                                className="bg-red-600 text-white px-3 py-1 rounded"
+                                                            >
+                                                                🗑️ Delete
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))
             )}
         </div>
     );
